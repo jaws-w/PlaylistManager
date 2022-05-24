@@ -47,7 +47,7 @@ for dup in dups:
 
     tracks = seen[dup]
     for k, (i, track) in enumerate(tracks):
-        print('Option {}: {} at playlist position {}.'.format(k, track['track']['external_urls'], i+1))
+        print('Option {}: {} at playlist position {}.'.format(k+1, track['track']['external_urls'], i+1))
         # print(k, i+1, ':', track['track']['external_urls'])
 
     keep = prompt('keep')
