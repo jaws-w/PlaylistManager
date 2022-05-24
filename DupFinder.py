@@ -1,4 +1,3 @@
-import os
 from click import prompt
 from dotenv import load_dotenv
 import spotipy
@@ -9,8 +8,6 @@ load_dotenv()
 scope = "playlist-modify-private"
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-
-# PLAYLIST_ID = '3iU6jJrwrAdGCT3W7JWPOY'
 
 PLAYLIST_ID = prompt('Enter Playlist ID')
 
@@ -44,20 +41,21 @@ to_remove = []
 
 print(dups)
 
-print('Found duplicates:')
+print('Found duplicates: (Enter a to keep all options, or specific the option to be kept)')
 for dup in dups:
     print(dup)
 
     tracks = seen[dup]
-    for i, track in tracks:
-        print(i+1, ':', track['track']['external_urls'])
+    for k, (i, track) in enumerate(tracks):
+        print('Option {}: {} at playlist position {}.'.format(k, track['track']['external_urls'], i+1))
+        # print(k, i+1, ':', track['track']['external_urls'])
 
     keep = prompt('keep')
     
     if keep == 'a' or keep == 'A' or keep == 'all':
         continue
     else:
-        keep = int(keep)
+        keep = int(keep) - 1
 
         if keep >= len(tracks):
             keep = int(prompt('Enter a valid index'))
