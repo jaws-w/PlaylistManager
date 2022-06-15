@@ -10,9 +10,6 @@ jikan = Jikan()
 
 load_dotenv()
 
-SPOTIPY_CLIENT_ID = '337ebb4fc2c9473cb3c9be7bde05923e'
-SPOTIPY_CLIENT_SECRET = '59ff208a0ab8439b81e1a602248954e1'
-
 MARKET_CODE = 'us'
 scope = "playlist-modify-private"
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
