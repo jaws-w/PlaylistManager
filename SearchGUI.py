@@ -36,11 +36,11 @@ class AnimeResult(ctk.CTkFrame):
         titleText.pack()
 
 class AnimeList(ctk.CTkFrame):
-    def __init__(self, query, pagenum, *args, bg_color=None, fg_color="default_theme", border_color="default_theme", border_width="default_theme", corner_radius="default_theme", width=200, height=200, overwrite_preferred_drawing_method: str = None, **kwargs):
+    def __init__(self, *args, bg_color=None, fg_color="default_theme", border_color="default_theme", border_width="default_theme", corner_radius="default_theme", width=200, height=200, overwrite_preferred_drawing_method: str = None, **kwargs):
         super().__init__(*args, bg_color=bg_color, fg_color=fg_color, border_color=border_color, border_width=border_width, corner_radius=corner_radius, width=width, height=height, overwrite_preferred_drawing_method=overwrite_preferred_drawing_method, **kwargs)
 
-        self.query = query
-        self.pagenum = pagenum
+        self.query = None
+        self.pagenum = 0
 
         scroll_canvas = ctk.CTkCanvas(master=self)
         scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
@@ -51,41 +51,37 @@ class AnimeList(ctk.CTkFrame):
         v.config(command=scroll_canvas.yview)
 
 
-        scroll_canvas.configure(yscrollcommand=v)
+        scroll_canvas.configure(yscrollcommand=v.set)
         scroll_canvas.bind('<Configure>', lambda e: scroll_canvas.configure(scrollregion=scroll_canvas.bbox('all')))
 
-        innerFrame = ctk.CTkFrame(master=scroll_canvas)
-        scroll_canvas.create_window((0,0), window=innerFrame, anchor='nw')
+        self.innerFrame = ctk.CTkFrame(master=scroll_canvas)
+        scroll_canvas.create_window((0,0), window=self.innerFrame, anchor='nw')
 
-        search_result = jikan.search('anime', query, page=pagenum)
+    def search(self, query, pagenum):
 
-        for anime in search_result['results']:
-            animeFrame = AnimeResult(master=innerFrame, anime=anime)
-            animeFrame.pack()
+        if self.query != query or self.pagenum != pagenum:
+            for child in self.innerFrame.winfo_children():
+                child.destroy()
+
+            self.query = query
+            self.pagenum = pagenum
+            search_result = jikan.search('anime', query, page=pagenum)
+
+            for anime in search_result['results']:
+                animeFrame = AnimeResult(master=self.innerFrame, anime=anime)
+                animeFrame.pack()
 
 def searchAnime():
     print('button pressed')
     anime_title = searchBar.get()
     if anime_title != '':
-        print(anime_title)
 
-        page_num = 1
+        print(anime_title)
 
         searchFm.pack(pady=50)
 
-        
-
-        animesList = AnimeList(master=app, query=anime_title, pagenum=page_num)
+        animesList.search(anime_title, 1)
         animesList.pack(fill=tk.BOTH, expand=True)
-
-
-        
-        # if anime_title != anime_title_old:
-        #     for child in animesList.winfo_children():
-        #         child.destroy()
-        # anime_title_old = anime_title
-
-        
         
 
 
@@ -98,9 +94,11 @@ searchFm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 searchBar = ctk.CTkEntry(master=searchFm, placeholder_text='Enter anime title', width=800)
 searchBar.pack(side=tk.LEFT)
+animesList = None
 
 searchBtn = ctk.CTkButton(master=searchFm, text='search', command=searchAnime)
 searchBtn.pack(padx=20, expand=False, side=tk.RIGHT)
 
+animesList = AnimeList(master=app)
 
 app.mainloop()
