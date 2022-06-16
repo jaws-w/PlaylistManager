@@ -1,5 +1,8 @@
+from cmath import exp
 from doctest import master
+from logging import root
 import tkinter as tk
+from tkinter.font import BOLD
 import customtkinter as ctk
 
 import re
@@ -32,6 +35,33 @@ class AnimeResult(ctk.CTkFrame):
         titleText = ctk.CTkLabel(master=self, text=anime['title'])
         titleText.pack()
 
+class AnimeList(ctk.CTkFrame):
+    def __init__(self, query, pagenum, *args, bg_color=None, fg_color="default_theme", border_color="default_theme", border_width="default_theme", corner_radius="default_theme", width=200, height=200, overwrite_preferred_drawing_method: str = None, **kwargs):
+        super().__init__(*args, bg_color=bg_color, fg_color=fg_color, border_color=border_color, border_width=border_width, corner_radius=corner_radius, width=width, height=height, overwrite_preferred_drawing_method=overwrite_preferred_drawing_method, **kwargs)
+
+        self.query = query
+        self.pagenum = pagenum
+
+        scroll_canvas = ctk.CTkCanvas(master=self)
+        scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+
+        v = tk.Scrollbar(master=self, orient='vertical')
+        v.pack(side=tk.RIGHT, fill=tk.Y)
+        v.config(command=scroll_canvas.yview)
+
+
+        scroll_canvas.configure(yscrollcommand=v)
+        scroll_canvas.bind('<Configure>', lambda e: scroll_canvas.configure(scrollregion=scroll_canvas.bbox('all')))
+
+        innerFrame = ctk.CTkFrame(master=scroll_canvas)
+        scroll_canvas.create_window((0,0), window=innerFrame, anchor='nw')
+
+        search_result = jikan.search('anime', query, page=pagenum)
+
+        for anime in search_result['results']:
+            animeFrame = AnimeResult(master=innerFrame, anime=anime)
+            animeFrame.pack()
 
 def searchAnime():
     print('button pressed')
@@ -43,20 +73,19 @@ def searchAnime():
 
         searchFm.pack(pady=50)
 
-        animesList = ctk.CTkFrame(master=app, bg_color='red')
+        
+
+        animesList = AnimeList(master=app, query=anime_title, pagenum=page_num)
         animesList.pack(fill=tk.BOTH, expand=True)
 
+
         
-        if anime_title != anime_title_old:
-            for child in animesList.winfo_children():
-                child.destroy()
-        anime_title_old = anime_title
+        # if anime_title != anime_title_old:
+        #     for child in animesList.winfo_children():
+        #         child.destroy()
+        # anime_title_old = anime_title
 
-        search_result = jikan.search('anime', anime_title, page=page_num)
-
-        for anime in search_result['results']:
-            animeFrame = AnimeResult(master=animesList, anime=anime)
-            animeFrame.pack()
+        
         
 
 
