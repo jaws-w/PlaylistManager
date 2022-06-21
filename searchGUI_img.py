@@ -1,12 +1,10 @@
-from cProfile import label
 from doctest import master
 from io import BytesIO
 import tkinter as tk
-from tkinter.font import BOLD
-from turtle import update
 import customtkinter as ctk
 from AnimeSearchV2 import *
 
+import asyncio
 
 from PIL import ImageTk, Image
 
@@ -33,6 +31,8 @@ jikan = Jikan()
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
+
+
 class AnimeResult(ctk.CTkFrame):
 
     def __init__(self, anime, *args, bg_color=None, fg_color="default_theme", border_color="default_theme", border_width="default_theme", corner_radius="default_theme", width=200, height=200, overwrite_preferred_drawing_method: str = None, **kwargs):
@@ -42,18 +42,27 @@ class AnimeResult(ctk.CTkFrame):
         self.songsShown = False
         self.songListFrame = None
 
-
-        imgRes = requests.get(anime['image_url'])
-        img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
-        imgLabel = ctk.CTkLabel(master=self, image=img)
-        imgLabel.image = img
-        imgLabel.pack(side=tk.LEFT)
+        # imgThread = threading.Thread(target=self.getImage())
+        # imgThread.start()
+        self.imgLabel = ctk.CTkLabel(master=self, width=50, height=70, text='img')
+        self.imgLabel.pack(side=tk.LEFT)
+        # self.getImage()
 
         self.titleText = ctk.CTkLabel(master=self, text=self.anime['title'])
-        self.titleText.pack(side=tk.LEFT)
+        self.titleText.pack(side=tk.LEFT, fill=tk.X, expand=1)
 
         self.showButton = ctk.CTkButton(master=self, text='>', command=lambda: AnimeResult.getSongs(self))
         self.showButton.pack(side=tk.LEFT, expand=False)
+
+        # imgThread.join()
+
+    async def getImage(self):
+        imgRes = requests.get(self.anime['image_url'])
+        img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
+        # imgLabel = ctk.CTkLabel(master=self, image=img)
+        self.imgLabel.configure(image=img)
+        self.imgLabel.image = img
+        print('task for {} finished'.format(self.anime['title']))
 
     def getSongs(self):
         if self.songsShown == False:
@@ -125,7 +134,7 @@ class AnimeList(ctk.CTkFrame):
         self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox('all'))
        
 
-    def search(self, query, pagenum):
+    async def search(self, query, pagenum):
 
         if self.query != query or self.pagenum != pagenum:
             for child in self.innerFrame.winfo_children():
@@ -133,11 +142,15 @@ class AnimeList(ctk.CTkFrame):
 
             self.query = query
             self.pagenum = pagenum
-            search_result = jikan.search('anime', query, page=5, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
+            search_result = jikan.search('anime', query, page=pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
 
-            for res in search_result['results'][:5]:
+            # imgTasks = []
+
+            for res in search_result['results']:
                 animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+                print('task for {} created'.format(res['title']))
+                asyncio.create_task(animeFrame.getImage())
 
             buttonHolder = ctk.CTkFrame(master=self.innerFrame)
             prevButton = ctk.CTkButton(master=buttonHolder, text='<')
@@ -147,12 +160,14 @@ class AnimeList(ctk.CTkFrame):
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
 
+            # await asyncio.gather(*imgTasks)
+
     # def updatePlaylist(self):
     #     if self.innerFrame.winfo_exists():
     #         for animeFrame in self.innerFrame.winfo_children():
     #             animeFrame.check()
 
-def searchAnime():
+async def searchAnime():
     # if animesList != None:
     #     animesList.updatePlaylist()
     #     #print(songPlaylist)
@@ -165,8 +180,8 @@ def searchAnime():
 
         searchFm.pack(pady=50)
 
-        animesList.search(anime_title, 1)
         animesList.pack(fill=tk.BOTH, expand=True)
+        await animesList.search(anime_title, 1)
 
     
 app = ctk.CTk()
@@ -180,7 +195,7 @@ searchBar = ctk.CTkEntry(master=searchFm, placeholder_text='Enter anime title', 
 searchBar.pack(side=tk.LEFT)
 # animesList = None
 
-searchBtn = ctk.CTkButton(master=searchFm, text='search', command=searchAnime)
+searchBtn = ctk.CTkButton(master=searchFm, text='search', command=lambda: asyncio.run(searchAnime()))
 searchBtn.pack(padx=20, expand=False, side=tk.RIGHT)
 
 # compileBtn = ctk.CTkButton(master=searchFm, text='make playlist', command=createSpotifyPlaylist)
