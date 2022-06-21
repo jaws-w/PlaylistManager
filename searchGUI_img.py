@@ -96,8 +96,15 @@ class AnimeList(ctk.CTkFrame):
         self.pagenum = 0
 
         self.scroll_canvas = ctk.CTkCanvas(master=self)
-        self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
+        buttonHolder = ctk.CTkFrame(master=self)
+        prevButton = ctk.CTkButton(master=buttonHolder, text='<')
+        nextButton = ctk.CTkButton(master=buttonHolder, text='>')
+
+        prevButton.pack(side=tk.LEFT)
+        nextButton.pack(side=tk.RIGHT)
+        buttonHolder.pack(side=tk.BOTTOM)
+        self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
         v = tk.Scrollbar(master=self, orient='vertical')
         v.pack(side=tk.RIGHT, fill=tk.Y)
@@ -109,8 +116,7 @@ class AnimeList(ctk.CTkFrame):
 
         self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
         self.w = self.scroll_canvas.create_window((0,0), window=self.innerFrame, anchor='nw')
-        self.innerFrame.bind('<Configure>', self.canvasConfigure)
-        
+        self.innerFrame.bind('<Configure>', self.canvasConfigure)        
 
     def frameWidth(self, event):
         print(event.width)
@@ -128,9 +134,9 @@ class AnimeList(ctk.CTkFrame):
 
             self.query = query
             self.pagenum = pagenum
-            search_result = jikan.search('anime', query, page=pagenum)
+            search_result = jikan.search('anime', query, page=pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
 
-            for res in search_result['results']:
+            for res in search_result['results'][:5]:
                 animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
@@ -175,8 +181,5 @@ searchBtn.pack(padx=20, expand=False, side=tk.RIGHT)
 songPlaylist = []
 
 animesList = AnimeList(master=app)
-
-# app.bind('<Button-1>', AnimeResult.clickTest)
-
 
 app.mainloop()
