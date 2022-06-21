@@ -10,6 +10,9 @@ jikan = Jikan()
 
 load_dotenv()
 
+SPOTIPY_CLIENT_ID = '337ebb4fc2c9473cb3c9be7bde05923e'
+SPOTIPY_CLIENT_SECRET = '59ff208a0ab8439b81e1a602248954e1'
+
 MARKET_CODE = 'us'
 scope = "playlist-modify-private"
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
@@ -126,6 +129,24 @@ def get_tracks(anime):
             input('press any key to continue')
 
     return sp_tracks
+
+def getIndividualTrack(track, songPlaylist):
+    print('Searching for', track[0], 'by', track[1])
+    query = 'track:{}+artist:{}'.format(track[0], track[1])
+    res = sp.search(query, type='track', market=MARKET_CODE)
+    if res['tracks']['items']:
+        #print('found and adding ', res['tracks']['items'][0])
+        songPlaylist.append(res['tracks']['items'][0])
+    else:
+        print('no tracks found for', track[0], 'by', track[1])
+
+def removeTrack(track, songPlaylist):
+    if track in songPlaylist:
+        print('Removing track:', track[0], 'by', track[1])
+        songPlaylist.pop(track)
+
+
+
 
 
 def search_anime(anime_name, page_num):
