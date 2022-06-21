@@ -57,8 +57,9 @@ class AnimeResult(ctk.CTkFrame):
         # imgThread.join()
 
     async def getImage(self):
+        app.update()
         imgRes = requests.get(self.anime['image_url'])
-        img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
+        img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize((50,70)))
         # imgLabel = ctk.CTkLabel(master=self, image=img)
         self.imgLabel.configure(image=img)
         self.imgLabel.image = img
