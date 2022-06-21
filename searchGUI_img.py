@@ -40,6 +40,8 @@ class AnimeResult(ctk.CTkFrame):
 
         self.anime = anime
         self.songsShown = False
+        self.songListFrame = None
+
 
         imgRes = requests.get(anime['image_url'])
         img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
@@ -55,25 +57,25 @@ class AnimeResult(ctk.CTkFrame):
 
     def getSongs(self):
         if self.songsShown == False:
-            self.songListFrame = ctk.CTkFrame(master=self)
-            
-            anime_res = jikan.anime(self.anime['mal_id'])
+            if self.songListFrame is None:
+                self.songListFrame = ctk.CTkFrame(master=self)
+                
+                anime_res = jikan.anime(self.anime['mal_id'])
 
-            songs = anime_res['opening_themes'] + anime_res['ending_themes']
+                songs = anime_res['opening_themes'] + anime_res['ending_themes']
 
-            for i, tr in enumerate(songs):
-                song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
-                song.pack(expand=1, fill=tk.X)
+                for tr in songs:
+                    song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
+                    song.pack(expand=1, fill=tk.X)
 
-            if len(self.songListFrame.winfo_children()) == 0:
-                nullLabel = ctk.CTkLabel(master=self.songListFrame, text='no songs found')
-                nullLabel.pack()
+                if len(self.songListFrame.winfo_children()) == 0:
+                    nullLabel = ctk.CTkLabel(master=self.songListFrame, text='no songs found')
+                    nullLabel.pack()
 
             self.songListFrame.pack(side=tk.LEFT)
             self.songsShown = True
         else:
             self.songListFrame.pack_forget()
-            self.songListFrame.destroy()
             self.songsShown = False
 
 
@@ -97,13 +99,7 @@ class AnimeList(ctk.CTkFrame):
 
         self.scroll_canvas = ctk.CTkCanvas(master=self)
 
-        buttonHolder = ctk.CTkFrame(master=self)
-        prevButton = ctk.CTkButton(master=buttonHolder, text='<')
-        nextButton = ctk.CTkButton(master=buttonHolder, text='>')
-
-        prevButton.pack(side=tk.LEFT)
-        nextButton.pack(side=tk.RIGHT)
-        buttonHolder.pack(side=tk.BOTTOM)
+        
         self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
         v = tk.Scrollbar(master=self, orient='vertical')
@@ -117,6 +113,9 @@ class AnimeList(ctk.CTkFrame):
         self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
         self.w = self.scroll_canvas.create_window((0,0), window=self.innerFrame, anchor='nw')
         self.innerFrame.bind('<Configure>', self.canvasConfigure)        
+
+        
+
 
     def frameWidth(self, event):
         print(event.width)
@@ -134,22 +133,30 @@ class AnimeList(ctk.CTkFrame):
 
             self.query = query
             self.pagenum = pagenum
-            search_result = jikan.search('anime', query, page=pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
+            search_result = jikan.search('anime', query, page=5, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
 
             for res in search_result['results'][:5]:
                 animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-    def updatePlaylist(self):
-        if self.innerFrame.winfo_exists():
-            for animeFrame in self.innerFrame.winfo_children():
-                animeFrame.check()
+            buttonHolder = ctk.CTkFrame(master=self.innerFrame)
+            prevButton = ctk.CTkButton(master=buttonHolder, text='<')
+            nextButton = ctk.CTkButton(master=buttonHolder, text='>')
+
+            prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
+            nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
+
+    # def updatePlaylist(self):
+    #     if self.innerFrame.winfo_exists():
+    #         for animeFrame in self.innerFrame.winfo_children():
+    #             animeFrame.check()
 
 def searchAnime():
-    if animesList != None:
-        animesList.updatePlaylist()
-        #print(songPlaylist)
-        print('updated')
+    # if animesList != None:
+    #     animesList.updatePlaylist()
+    #     #print(songPlaylist)
+    #     print('updated')
     print('button pressed')
     anime_title = searchBar.get()
     if anime_title != '':
@@ -171,7 +178,7 @@ searchFm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 searchBar = ctk.CTkEntry(master=searchFm, placeholder_text='Enter anime title', width=800)
 searchBar.pack(side=tk.LEFT)
-animesList = None
+# animesList = None
 
 searchBtn = ctk.CTkButton(master=searchFm, text='search', command=searchAnime)
 searchBtn.pack(padx=20, expand=False, side=tk.RIGHT)
