@@ -34,40 +34,57 @@ ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 class AnimeResult(ctk.CTkFrame):
+
     def __init__(self, anime, *args, bg_color=None, fg_color="default_theme", border_color="default_theme", border_width="default_theme", corner_radius="default_theme", width=200, height=200, overwrite_preferred_drawing_method: str = None, **kwargs):
         super().__init__(*args, bg_color=bg_color, fg_color=fg_color, border_color=border_color, border_width=border_width, corner_radius=corner_radius, width=width, height=height, overwrite_preferred_drawing_method=overwrite_preferred_drawing_method, **kwargs)
 
         self.anime = anime
+        self.songsShown = False
 
-        #imgRes = requests.get(anime['image_url'])
-        #img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
-        #imgLabel = ctk.CTkLabel(master=self, image=img)
-        #imgLabel.image = img
-        #imgLabel.pack(side=tk.LEFT)
+        imgRes = requests.get(anime['image_url'])
+        img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)))
+        imgLabel = ctk.CTkLabel(master=self, image=img)
+        imgLabel.image = img
+        imgLabel.pack(side=tk.LEFT)
 
         self.titleText = ctk.CTkLabel(master=self, text=self.anime['title'])
         self.titleText.pack(side=tk.LEFT)
-        self.songListFrame = ctk.CTkFrame(master=self)
-        
-        anime_res = jikan.anime(anime['mal_id'])
 
-        for tr in anime_res['opening_themes']:
-            song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
-            song.pack()
+        self.showButton = ctk.CTkButton(master=self, text='>', command=lambda: AnimeResult.getSongs(self))
+        self.showButton.pack(side=tk.LEFT, expand=False)
 
-        for tr in anime_res['ending_themes']:
-            song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
-            song.pack()
+    # TODO: Switch this list to grid
+    def getSongs(self):
+        if self.songsShown == False:
+            self.songListFrame = ctk.CTkFrame(master=self)
+            
+            anime_res = jikan.anime(self.anime['mal_id'])
 
-        self.songListFrame.pack(side=tk.LEFT)
+            for tr in anime_res['opening_themes']:
+                song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
+                song.pack()
+
+            for tr in anime_res['ending_themes']:
+                song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
+                song.pack()
+
+            if len(self.songListFrame.winfo_children()) == 0:
+                nullLabel = ctk.CTkLabel(master=self.songListFrame, text='no songs found')
+                nullLabel.pack()
+
+            self.songListFrame.pack(side=tk.LEFT)
+            self.songsShown = True
+        else:
+            self.songListFrame.pack_forget()
+            self.songListFrame.destroy()
+            self.songsShown = False
+
 
     def check(self):
         for checkbox in self.songListFrame.winfo_children():
             if checkbox.get() == 1:
                 addTrack(checkbox.text, songPlaylist)
 
-
-        
 
 def addTrack(track, songPlaylist):
     print('adding track')
@@ -116,10 +133,9 @@ class AnimeList(ctk.CTkFrame):
             self.pagenum = pagenum
             search_result = jikan.search('anime', query, page=pagenum)
 
-            for i in range(5):
-                res = search_result['results'][i]
+            for res in search_result['results']:
                 animeFrame = AnimeResult(master=self.innerFrame, anime=res)
-                animeFrame.pack()
+                animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
     def updatePlaylist(self):
         if self.innerFrame.winfo_exists():
@@ -142,8 +158,6 @@ def searchAnime():
         animesList.search(anime_title, 1)
         animesList.pack(fill=tk.BOTH, expand=True)
 
-def createSpotifyPlaylist():
-    
     
 app = ctk.CTk()
 app.geometry('1920x1080')
@@ -159,10 +173,13 @@ animesList = None
 searchBtn = ctk.CTkButton(master=searchFm, text='search', command=searchAnime)
 searchBtn.pack(padx=20, expand=False, side=tk.RIGHT)
 
-compileBtn = ctk.CTKButton(master=searchFm, text='make playlist', command=createSpotifyPlaylist)
+# compileBtn = ctk.CTkButton(master=searchFm, text='make playlist', command=createSpotifyPlaylist)
 
 songPlaylist = []
 
 animesList = AnimeList(master=app)
+
+# app.bind('<Button-1>', AnimeResult.clickTest)
+
 
 app.mainloop()
