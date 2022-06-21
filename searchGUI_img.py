@@ -53,20 +53,17 @@ class AnimeResult(ctk.CTkFrame):
         self.showButton = ctk.CTkButton(master=self, text='>', command=lambda: AnimeResult.getSongs(self))
         self.showButton.pack(side=tk.LEFT, expand=False)
 
-    # TODO: Switch this list to grid
     def getSongs(self):
         if self.songsShown == False:
             self.songListFrame = ctk.CTkFrame(master=self)
             
             anime_res = jikan.anime(self.anime['mal_id'])
 
-            for tr in anime_res['opening_themes']:
-                song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
-                song.pack()
+            songs = anime_res['opening_themes'] + anime_res['ending_themes']
 
-            for tr in anime_res['ending_themes']:
+            for i, tr in enumerate(songs):
                 song = ctk.CTkCheckBox(master=self.songListFrame, text=tr)
-                song.pack()
+                song.pack(expand=1, fill=tk.X)
 
             if len(self.songListFrame.winfo_children()) == 0:
                 nullLabel = ctk.CTkLabel(master=self.songListFrame, text='no songs found')
