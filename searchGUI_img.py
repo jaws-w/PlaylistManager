@@ -37,8 +37,8 @@ class AnimeResult(ctk.CTkFrame):
         self.showButton = ctk.CTkButton(master=dummyFrame, text='Show songs', command=lambda: AnimeResult.show_songs(self))
         self.showButton.pack(side=tk.LEFT, expand=False)
 
-        asyncio.run(library.set_image(self.anime, self.imgLabel))
-        app.update()
+        # asyncio.run(library.set_image(self.anime, self.imgLabel))
+        # app.update()
 
     def select_song(self, tr):
         playlist.update_playlist(tr)
@@ -136,7 +136,7 @@ class AnimeList(ctk.CTkFrame):
         self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox('all'))
        
 
-    def search(self, query, pagenum):
+    async def search(self, query, pagenum):
 
         if self.query != query or self.pagenum != pagenum:
             for child in self.innerFrame.winfo_children():
@@ -150,6 +150,9 @@ class AnimeList(ctk.CTkFrame):
             for res in search_result['results']:
                 animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+
+                asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
+                app.update()
                 
 
             buttonHolder = ctk.CTkFrame(master=self.innerFrame)
@@ -159,6 +162,7 @@ class AnimeList(ctk.CTkFrame):
             prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
+            
 
 class tkinterApp(ctk.CTk):
     def __init__(self):
@@ -213,7 +217,7 @@ class SearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            self.animesList.search(anime_title, 1)
+            asyncio.run(self.animesList.search(anime_title, 1))
 
 class DisplayPage(ctk.CTkFrame):
     def __init__(self, controller, *args, **kwargs):
