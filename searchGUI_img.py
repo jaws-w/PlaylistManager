@@ -1,5 +1,6 @@
+from cProfile import label
+from doctest import master
 import tkinter as tk
-from tkinter.ttk import Label, Style
 
 import customtkinter as ctk
 from customtkinter import ThemeManager
@@ -178,7 +179,7 @@ class tkinterApp(ctk.CTk):
         masterFrame.pack(side=tk.TOP, fill="both", expand = True)
 
         self.frames = {}
-        for page in (SearchPage, DisplayPage):
+        for page in (SearchPage, PlaylistPage):
             frame = page(master=masterFrame, controller=self)
             self.frames[page] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -186,7 +187,10 @@ class tkinterApp(ctk.CTk):
         self.show_frame(SearchPage)
 
     def show_frame(self, cont):
+            
         frame = self.frames[cont]
+        if cont == PlaylistPage:
+            frame.playlistFm.load_current_playlist()
         frame.tkraise()
 
 class SearchPage(ctk.CTkFrame):
@@ -203,7 +207,7 @@ class SearchPage(ctk.CTkFrame):
         self.searchBtn = ctk.CTkButton(master=self.searchFm, text='search', command=self.searchAnime)
         self.searchBtn.pack(padx=20, expand=False, side=tk.LEFT)
 
-        self.goToPlaylist = ctk.CTkButton(master=self.searchFm, text='current playlist >', command=lambda: controller.show_frame(DisplayPage))
+        self.goToPlaylist = ctk.CTkButton(master=self.searchFm, text='current playlist >', command=lambda: controller.show_frame(PlaylistPage))
         self.goToPlaylist.pack(padx=20, side=tk.LEFT)
         
     
@@ -219,27 +223,48 @@ class SearchPage(ctk.CTkFrame):
             self.animesList.pack(fill=tk.BOTH, expand=True)
             asyncio.run(self.animesList.search(anime_title, 1))
 
-class DisplayPage(ctk.CTkFrame):
+
+class PlaylistPage(ctk.CTkFrame):
     def __init__(self, controller, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.goBackBtn = ctk.CTkButton(master=self, text='add more songs', command=lambda: controller.show_frame(SearchPage))
-        self.goBackBtn.pack(side=tk.LEFT, anchor=tk.N)
+        self.playlistFm = PlaylistPage.PlaylistFrame(master=self, controller=controller)
+        self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, ipadx=20)
 
-        self.style = Style(self)
+        self.spotifyFm = PlaylistPage.SpotifySearchFrame(master=self)
+        self.spotifyFm.grid(row=0, column=1, sticky=tk.NSEW)
 
-        self.style.configure("titleFont", font=('Arial', 25))
-        title = Label(master=self, text='Your Playlist')
-        title.pack(anchor=tk.N)
+        self.columnconfigure(0, weight=1, uniform='group1')
+        self.columnconfigure(1, weight=1, uniform='group1')
+        
+    
+    class PlaylistFrame(ctk.CTkFrame):
+        def __init__(self, controller, *args, **kwargs):
+            super().__init__(*args, **kwargs)
 
-        # currentPlaylist(self, songPlaylist)
+            title = ctk.CTkLabel(master=self, text='Your Playlist')
+            title.pack(side=tk.TOP)
 
-def currentPlaylist(obj, songPlaylist):
-    for tr in songPlaylist:
-        songLabel = ctk.CTk(master=obj, text=tr, pady=20)
-        songLabel.pack(side=tk.BOTTOM)
+            self.goBackBtn = ctk.CTkButton(master=self, text='< add more songs', command=lambda: controller.show_frame(SearchPage))
+            self.goBackBtn.pack(side=tk.BOTTOM)
+
+        def load_current_playlist(self):
+            for tr in playlist.playlist:
+                songLabel = ctk.CTkLabel(master=self, text=tr, pady=20)
+                songLabel.pack(side=tk.TOP)
+    
+    class SpotifySearchFrame(ctk.CTkFrame):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        def search_spotify(self, track):
+            label = ctk.CTkLabel(master=self, text='Searching for {} by {} on Spotify'.format(track[0], track[1]))
+            label.pack()
 
 
-app = tkinterApp()
-playlist = library.Playlist()
-app.mainloop()
+
+
+if __name__ == '__main__':
+    playlist = library.Playlist()
+    app = tkinterApp()
+    app.mainloop()
