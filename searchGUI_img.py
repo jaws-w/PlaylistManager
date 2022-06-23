@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter.ttk import Label, Style
+from unittest import result
 
 import customtkinter as ctk
 from customtkinter import ThemeManager
@@ -139,35 +140,44 @@ class AnimeList(ctk.CTkFrame):
         self.scroll_canvas.yview_scroll(-1 * event.delta, 'units')
        
 
-    async def search(self, query, pagenum):
-        if self.query != query or self.pagenum != pagenum:
-            for child in self.innerFrame.winfo_children():
-                child.destroy()
+    async def search(self, query, pagenum, result_num):
+        print('result=', result_num)
+        if result_num in range(0, 10):
+            if self.query != query or self.pagenum != pagenum or self.result_num != result_num:
+                print('new search')
+                for child in self.innerFrame.winfo_children():
+                    child.destroy()
 
-            #go to top of results page
-            self.scroll_canvas.yview_moveto('0.0')
+                #go to top of results page
+                self.scroll_canvas.yview_moveto('0.0')
 
-            self.query = query
-            self.pagenum = pagenum
-            search_result = library.search_anime(query, pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
+                self.query = query
+                self.pagenum = pagenum
+                self.result_num = result_num
+                search_result = library.search_anime(query, pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
 
-            # LIMIT TO 5 FOR TESTINGS
-            for res in search_result['results']:
-                animeFrame = AnimeResult(master=self.innerFrame, anime=res)
-                animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+                # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
+                for i in range(self.result_num * 10, (self.result_num + 1) * 10):
+                    res = search_result['results'][i]
+                    animeFrame = AnimeResult(master=self.innerFrame, anime=res)
+                    animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-                asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
-                app.update()
-                
+                    asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
+                    app.update()
+                    
 
-            buttonHolder = ctk.CTkFrame(master=self.innerFrame)
-            prevButton = ctk.CTkButton(master=buttonHolder, text='<')
-            nextButton = ctk.CTkButton(master=buttonHolder, text='>')
+                buttonHolder = ctk.CTkFrame(master=self.innerFrame)
+                # user can navigate through 5 pages, first and last pages only have one page button
+                if (result_num > 0):
+                    prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
+                    prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
+                if (result_num < 4):
+                    nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
+                    nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+                buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1) 
 
-            prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
-            nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
-            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)   
-            
+    def diffPage(self, query, pagenum, result_num):
+        asyncio.run(self.search(query, pagenum, result_num))     
 
 class tkinterApp(ctk.CTk):
     def __init__(self):
@@ -223,8 +233,9 @@ class SearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1))
-    #overload of searchAnime when return key is pressed
+            asyncio.run(self.animesList.search(anime_title, 1, 0))
+            
+    #searchAnime when return key is pressed
     def searchAnimeReturn(self, event):
         print('button pressed')
         anime_title = self.searchBar.get()
@@ -235,7 +246,7 @@ class SearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1))
+            asyncio.run(self.animesList.search(anime_title, 1, 0))
 
 class DisplayPage(ctk.CTkFrame):
     def __init__(self, controller, *args, **kwargs):
