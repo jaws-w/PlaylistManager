@@ -38,9 +38,6 @@ class AnimeResult(ctk.CTkFrame):
         self.showButton = ctk.CTkButton(master=dummyFrame, text='Show songs', command=lambda: AnimeResult.show_songs(self))
         self.showButton.pack(side=tk.LEFT, expand=False)
 
-        # asyncio.run(library.set_image(self.anime, self.imgLabel))
-        # app.update()
-
     def select_song(self, tr):
         playlist.update_playlist(tr)
         self.update_buttons()
@@ -111,6 +108,7 @@ class AnimeList(ctk.CTkFrame):
 
         self.query = None
         self.pagenum = 0
+        self.result_num = -1
 
         self.scroll_canvas = ctk.CTkCanvas(master=self, bg='#343638', bd=0, highlightthickness=0)   
         self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
@@ -129,6 +127,7 @@ class AnimeList(ctk.CTkFrame):
         self.innerFrame.bind('<Configure>', self.canvasConfigure)
 
         self.cachedFrames = dict()
+        self.loadedPages = 0
 
     def frameWidth(self, event):
         print(event.width)
@@ -144,23 +143,40 @@ class AnimeList(ctk.CTkFrame):
 
     async def search(self, query, pagenum, result_num):
         print('result=', result_num)
-        if result_num in range(0, 10):
-            if self.query != query or self.pagenum != pagenum or self.result_num != result_num:
-                print('new search')
-                for child in self.innerFrame.winfo_children():
-                    child.pack_forget()
+        print('page=', pagenum)
 
-                #go to top of results page
-                self.scroll_canvas.yview_moveto('0.0')
+        if self.query != query or self.pagenum != pagenum:
+            self.search_result = library.search_anime(query, pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
+            self.result_num = -1
+            
+        if self.result_num != result_num:
+            
+            print('new search')
+            for child in self.innerFrame.winfo_children():
+                child.pack_forget()
 
-                self.query = query
-                self.pagenum = pagenum
-                self.result_num = result_num
-                search_result = library.search_anime(query, pagenum, parameters={'rated': ['g', 'pg', 'pg13', 'r17']})
+            #go to top of results page
+            self.scroll_canvas.yview_moveto('0.0')
 
-                # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
+            self.query = query
+            self.pagenum = pagenum
+            self.result_num = result_num
+
+
+            buttonHolder = ctk.CTkFrame(master=self.innerFrame)
+            prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
+            nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
+            prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
+            nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+            if (result_num <= 0):
+                prevButton.config(state='disabled', fg_color='gray')
+            if (result_num >= self.search_result['last_page'] > 10):
+                nextButton.config(state='disabled', fg_color='gray')
+
+            # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
+            try: 
                 for i in range(self.result_num * 10, (self.result_num + 1) * 10):
-                    res = search_result['results'][i]
+                    res = self.search_result['results'][i % 50]
                     if res['mal_id'] not in self.cachedFrames:
                         animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                         asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
@@ -172,32 +188,22 @@ class AnimeList(ctk.CTkFrame):
                     animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
                     app.update()
-                    
+            except IndexError:
+                nextButton.config(state='disabled', fg_color='gray')
+            
 
-                buttonHolder = ctk.CTkFrame(master=self.innerFrame)
-                # user can navigate through 5 pages, first and last pages only have one page button
-                # if (result_num > 0):
-                #     prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
-                #     prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
-                # if (result_num < 4):
-                #     nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
-                #     nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
-                prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
-                nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
-                prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
-                nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
-                
-                if (result_num <= 0):
-                    prevButton.config(state='disabled', fg_color='gray')
-                if (result_num >= 4):
-                    nextButton.config(state='disabled', fg_color='gray')
-
-                buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1) 
-                app.update()
+            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1) 
+            app.update()
 
 
     def diffPage(self, query, pagenum, result_num):
-        asyncio.run(self.search(query, pagenum, result_num))     
+        if result_num >= 5 * pagenum:
+            asyncio.run(self.search(query, pagenum+1, result_num))
+        elif result_num < 5 * (pagenum - 1):
+            asyncio.run(self.search(query, pagenum-1, result_num))
+        else:
+            asyncio.run(self.search(query, pagenum, result_num))
+            
 
 class tkinterApp(ctk.CTk):
     def __init__(self):

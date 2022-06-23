@@ -18,6 +18,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 user_id = sp.current_user()['id']
 
 def search_anime(anime_title, page, parameters):
+    print(f'Searching for page {page} of {anime_title}')
     return jikan.search('anime', anime_title, page=page, parameters=parameters)
 
 def parse_track(track):
@@ -42,18 +43,11 @@ def get_songs(anime):
 
 
 async def set_image(anime, target, size=(50,70)):
-    
-    print('task created for {}'.format(anime['title']))
-    # app.update()
     imgRes = requests.get(anime['image_url'])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
-    # # imgLabel = ctk.CTkLabel(master=self, image=img)
     target.configure(image=img)
     target.image = img
-    # print('task for {} finished'.format(self.anime['title']))
-    print('task finished for {}'.format(anime['title']))
-
-    # return Image.open(BytesIO(imgRes.content)).resize(size)
+    print(f'Image fetched for {anime["title"]}')
 
 class Playlist():
 
