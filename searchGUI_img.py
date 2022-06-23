@@ -126,7 +126,9 @@ class AnimeList(ctk.CTkFrame):
 
         self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
         self.w = self.scroll_canvas.create_window((0,0), window=self.innerFrame, anchor='nw')
-        self.innerFrame.bind('<Configure>', self.canvasConfigure)        
+        self.innerFrame.bind('<Configure>', self.canvasConfigure)
+
+        self.cachedFrames = dict()
 
     def frameWidth(self, event):
         print(event.width)
@@ -146,7 +148,7 @@ class AnimeList(ctk.CTkFrame):
             if self.query != query or self.pagenum != pagenum or self.result_num != result_num:
                 print('new search')
                 for child in self.innerFrame.winfo_children():
-                    child.destroy()
+                    child.pack_forget()
 
                 #go to top of results page
                 self.scroll_canvas.yview_moveto('0.0')
@@ -159,22 +161,40 @@ class AnimeList(ctk.CTkFrame):
                 # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
                 for i in range(self.result_num * 10, (self.result_num + 1) * 10):
                     res = search_result['results'][i]
-                    animeFrame = AnimeResult(master=self.innerFrame, anime=res)
+                    if res['mal_id'] not in self.cachedFrames:
+                        animeFrame = AnimeResult(master=self.innerFrame, anime=res)
+                        asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
+
+                        self.cachedFrames[res['mal_id']] = animeFrame
+                    else:
+                        animeFrame = self.cachedFrames[res['mal_id']]
+
                     animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-                    asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
                     app.update()
                     
 
                 buttonHolder = ctk.CTkFrame(master=self.innerFrame)
                 # user can navigate through 5 pages, first and last pages only have one page button
-                if (result_num > 0):
-                    prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
-                    prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
-                if (result_num < 4):
-                    nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
-                    nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+                # if (result_num > 0):
+                #     prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
+                #     prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
+                # if (result_num < 4):
+                #     nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
+                #     nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+                prevButton = ctk.CTkButton(master=buttonHolder, text='<', command= lambda: self.diffPage(query, pagenum, result_num-1))
+                nextButton = ctk.CTkButton(master=buttonHolder, text='>', command= lambda: self.diffPage(query, pagenum, result_num+1))
+                prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
+                nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
+                
+                if (result_num <= 0):
+                    prevButton.config(state='disabled', fg_color='gray')
+                if (result_num >= 4):
+                    nextButton.config(state='disabled', fg_color='gray')
+
                 buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1) 
+                app.update()
+
 
     def diffPage(self, query, pagenum, result_num):
         asyncio.run(self.search(query, pagenum, result_num))     
