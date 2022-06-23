@@ -29,7 +29,6 @@ def parse_track(track):
 
 def get_songs(anime):
     anime_res = jikan.anime(anime['mal_id'])
-    # songs = anime_res['opening_themes'] + anime_res['ending_themes']
     ops = []
     eds = []
     

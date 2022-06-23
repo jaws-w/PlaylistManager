@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter.ttk import Label, Style
-from unittest import result
 
 import customtkinter as ctk
 from customtkinter import ThemeManager
@@ -12,13 +11,11 @@ import library
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
-
-
+# Class for displaying anime
 class AnimeResult(ctk.CTkFrame):
-    def __init__(self, 
-        anime, 
-        *args, 
-        **kwargs):
+
+    # init Frame with Jikan anime search response as argument
+    def __init__(self, anime, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.anime = anime
@@ -38,6 +35,7 @@ class AnimeResult(ctk.CTkFrame):
         self.showButton = ctk.CTkButton(master=dummyFrame, text='Show songs', command=lambda: AnimeResult.show_songs(self))
         self.showButton.pack(side=tk.LEFT, expand=False)
 
+    # onClick function for song buttons
     def select_song(self, tr):
         playlist.update_playlist(tr)
         self.update_buttons()
