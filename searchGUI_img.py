@@ -166,13 +166,7 @@ class AnimeList(ctk.CTkFrame):
 
             prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
-            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
-
-class ResultPage(ctk.CTkFrame):
-    def __init__(self, controller, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    
+            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)   
             
 
 class tkinterApp(ctk.CTk):
@@ -212,7 +206,7 @@ class SearchPage(ctk.CTkFrame):
         self.animesList = AnimeList(master=self)
 
         self.searchBtn = ctk.CTkButton(master=self.searchFm, text='search', command=self.searchAnime)
-        self.bind_all('<Return>', self.searchAnime)
+        self.bind_all('<Return>', self.searchAnimeReturn)
         self.searchBtn.pack(padx=20, expand=False, side=tk.LEFT)
 
         self.goToPlaylist = ctk.CTkButton(master=self.searchFm, text='current playlist >', command=lambda: controller.show_frame(DisplayPage))
@@ -231,7 +225,7 @@ class SearchPage(ctk.CTkFrame):
             self.animesList.pack(fill=tk.BOTH, expand=True)
             asyncio.run(self.animesList.search(anime_title, 1))
     #overload of searchAnime when return key is pressed
-    def searchAnime(self, event):
+    def searchAnimeReturn(self, event):
         print('button pressed')
         anime_title = self.searchBar.get()
         if anime_title != '':
