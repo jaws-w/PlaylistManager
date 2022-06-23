@@ -1,3 +1,4 @@
+from signal import SIGBREAK
 import tkinter as tk
 
 import customtkinter as ctk
@@ -83,6 +84,13 @@ class AnimeResult(ctk.CTkFrame):
                 
             self.showButton.configure(text='Hide songs')
             self.songListFrame.pack(side=tk.TOP, fill=tk.X)
+            self.update_buttons()
+ 
+            for sibling in self.master.winfo_children():
+                if isinstance(sibling, AnimeResult):
+                    if sibling is not self and sibling.songsShown:
+                        sibling.show_songs()
+
         else:
             self.showButton.configure(text='Show songs')
             self.songListFrame.pack_forget()
