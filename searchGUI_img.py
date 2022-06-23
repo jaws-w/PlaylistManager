@@ -111,18 +111,17 @@ class AnimeList(ctk.CTkFrame):
         self.query = None
         self.pagenum = 0
 
-        self.scroll_canvas = ctk.CTkCanvas(master=self, bg='#343638', bd=0, highlightthickness=0)
-
-        
+        self.scroll_canvas = ctk.CTkCanvas(master=self, bg='#343638', bd=0, highlightthickness=0)   
         self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-        v = tk.Scrollbar(master=self, orient='vertical')
-        v.pack(side=tk.RIGHT, fill=tk.Y)
-        v.config(command=self.scroll_canvas.yview)
+        self.v = tk.Scrollbar(master=self, orient='vertical')
+        self.v.pack(side=tk.RIGHT, fill=tk.Y)
+        self.v.config(command=self.scroll_canvas.yview)
 
-
-        self.scroll_canvas.configure(yscrollcommand=v.set)
+        self.scroll_canvas.configure(yscrollcommand=self.v.set)
         self.scroll_canvas.bind('<Configure>', self.frameWidth)
+
+        self.scroll_canvas.bind_all('<MouseWheel>', self.on_vertical)
 
         self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
         self.w = self.scroll_canvas.create_window((0,0), window=self.innerFrame, anchor='nw')
@@ -134,13 +133,19 @@ class AnimeList(ctk.CTkFrame):
 
     def canvasConfigure(self, event):
         self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox('all'))
+
+    #enable trackpad/mousewheel scrolling
+    def on_vertical(self, event):
+        self.scroll_canvas.yview_scroll(-1 * event.delta, 'units')
        
 
     async def search(self, query, pagenum):
-
         if self.query != query or self.pagenum != pagenum:
             for child in self.innerFrame.winfo_children():
                 child.destroy()
+
+            #go to top of results page
+            self.scroll_canvas.yview_moveto('0.0')
 
             self.query = query
             self.pagenum = pagenum
@@ -162,6 +167,12 @@ class AnimeList(ctk.CTkFrame):
             prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
+
+class ResultPage(ctk.CTkFrame):
+    def __init__(self, controller, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    
             
 
 class tkinterApp(ctk.CTk):
@@ -201,6 +212,7 @@ class SearchPage(ctk.CTkFrame):
         self.animesList = AnimeList(master=self)
 
         self.searchBtn = ctk.CTkButton(master=self.searchFm, text='search', command=self.searchAnime)
+        self.bind_all('<Return>', self.searchAnime)
         self.searchBtn.pack(padx=20, expand=False, side=tk.LEFT)
 
         self.goToPlaylist = ctk.CTkButton(master=self.searchFm, text='current playlist >', command=lambda: controller.show_frame(DisplayPage))
@@ -208,6 +220,18 @@ class SearchPage(ctk.CTkFrame):
         
     
     def searchAnime(self):
+        print('button pressed')
+        anime_title = self.searchBar.get()
+        if anime_title != '':
+
+            print(anime_title)
+
+            self.searchFm.pack(pady=50)
+
+            self.animesList.pack(fill=tk.BOTH, expand=True)
+            asyncio.run(self.animesList.search(anime_title, 1))
+    #overload of searchAnime when return key is pressed
+    def searchAnime(self, event):
         print('button pressed')
         anime_title = self.searchBar.get()
         if anime_title != '':
