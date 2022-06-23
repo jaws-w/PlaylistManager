@@ -1,5 +1,3 @@
-from cProfile import label
-from doctest import master
 import tkinter as tk
 
 import customtkinter as ctk
@@ -282,10 +280,10 @@ class PlaylistPage(ctk.CTkFrame):
         super().__init__(*args, **kwargs)
         
         self.playlistFm = PlaylistPage.PlaylistFrame(master=self, controller=controller)
-        self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, ipadx=20)
+        self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
         self.spotifyFm = PlaylistPage.SpotifySearchFrame(master=self)
-        self.spotifyFm.grid(row=0, column=1, sticky=tk.NSEW)
+        self.spotifyFm.grid(row=0, column=1, sticky=tk.NSEW, padx=10, pady=10)
 
         self.columnconfigure(0, weight=1, uniform='group1')
         self.columnconfigure(1, weight=1, uniform='group1')
@@ -295,16 +293,39 @@ class PlaylistPage(ctk.CTkFrame):
         def __init__(self, controller, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-            title = ctk.CTkLabel(master=self, text='Your Playlist')
+            title = ctk.CTkLabel(master=self, pady=20, text='Your Playlist')
             title.pack(side=tk.TOP)
 
-            self.goBackBtn = ctk.CTkButton(master=self, text='< add more songs', command=lambda: controller.show_frame(SearchPage))
+            self.goBackBtn = ctk.CTkButton(master=self, text='< add more songs', pady=20, command=lambda: controller.show_frame(SearchPage))
             self.goBackBtn.pack(side=tk.BOTTOM)
 
+            self.songButtons = []
+
         def load_current_playlist(self):
+            for btn in self.songButtons:
+                btn.destroy()
+
+            self.songButtons = []
+
             for tr in playlist.playlist:
-                songLabel = ctk.CTkLabel(master=self, text=tr, pady=20)
-                songLabel.pack(side=tk.TOP)
+                songBtn = ctk.CTkButton(master=self, text=tr, fg_color='gray')
+                songBtn.track = tr
+                songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
+                songBtn.pack(side=tk.TOP, fill=tk.X, expand=1)
+                self.songButtons.append(songBtn)
+            
+            if self.songButtons:
+                self.songBtnOnClick(self.songButtons[0])
+
+        def songBtnOnClick(self, btn):
+            print(self.master)
+            print(btn.track)
+            for button in self.songButtons:
+                if button is btn:
+                    button.configure(fg_color=ThemeManager.theme["color"]["button"])
+                else:
+                    button.configure(fg_color = 'gray')
+            self.master.spotifyFm.search_spotify(btn.track)
     
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, *args, **kwargs):
