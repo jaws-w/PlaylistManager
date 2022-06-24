@@ -2,7 +2,7 @@ import requests
 from jikanpy import Jikan
 from dotenv import load_dotenv
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyPKCE
 
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -14,8 +14,11 @@ load_dotenv()
 
 MARKET_CODE = 'us'
 scope = "playlist-modify-private"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-user_id = sp.current_user()['id']
+
+spPKCE = SpotifyPKCE(scope=scope)
+
+sp = spotipy.Spotify(auth_manager=spPKCE)
+# user_id = sp.current_user()['id']
 
 def search_anime(anime_title, page, parameters):
     print(f'Searching for page {page} of {anime_title}')
@@ -48,6 +51,12 @@ async def set_image(anime, target, size=(50,70)):
     target.image = img
     print(f'Image fetched for {anime["title"]}')
 
+def search_spotify(song, artist):
+    query = f'track:{song}+artist:{artist}'
+    res = sp.search(query, type='track', market=MARKET_CODE)
+    tracks = [SpotifyTrack(song) for song in res['tracks']['items']]
+    return (res['tracks']['previous'], res['tracks']['next'], tracks)
+
 class Playlist():
 
     def __init__(self) -> None:
@@ -58,4 +67,14 @@ class Playlist():
             self.playlist.remove(tr)
         else:
             self.playlist.add(tr)
+
+class SpotifyTrack():
+
+    def __init__(self, track) -> None:
+        self.track_title = track['name']
+        self.album_name = track['album']['name']
+        self.album_cover = track['album']['images'][0]
+        self.duration = track['duration_ms']
+        self.artists = [artist['name'] for artist in track['artists']]
+        self.preview_url = track['preview_url']
 

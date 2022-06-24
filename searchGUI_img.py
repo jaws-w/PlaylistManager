@@ -326,7 +326,6 @@ class PlaylistPage(ctk.CTkFrame):
                 self.songBtnOnClick(self.songButtons[0])
 
         def songBtnOnClick(self, btn):
-            print(self.master)
             print(btn.track)
             for button in self.songButtons:
                 if button is btn:
@@ -340,8 +339,24 @@ class PlaylistPage(ctk.CTkFrame):
             super().__init__(*args, **kwargs)
 
         def search_spotify(self, track):
+            for child in self.winfo_children():
+                child.destroy()
+
             label = ctk.CTkLabel(master=self, text='Searching for {} by {} on Spotify'.format(track[0], track[1]))
             label.pack()
+
+            response = library.search_spotify(track[0], track[1])
+            self.previous, self.next, self.tracks = response
+
+            for track in self.tracks:
+                print(track.track_title, track.preview_url)
+
+
+
+                
+
+
+
 
 
 if __name__ == '__main__':
