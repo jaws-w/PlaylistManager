@@ -385,8 +385,8 @@ class PlaylistPage(ctk.CTkFrame):
             for i, track in enumerate(self.tracks):
                 print(track.track_title, track.preview_url)
 
-                prevBtn = ctk.CTkButton(master=self, text="play")
-                prevBtn.grid(row=i + 1, column=0)
+                playBtn = ctk.CTkButton(master=self, text="play")
+                playBtn.grid(row=i + 1, column=0)
                 titleLabel = ctk.CTkLabel(
                     master=self, text=track.track_title, anchor=tk.W
                 )
