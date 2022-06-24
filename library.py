@@ -61,14 +61,17 @@ async def set_image(anime, target, size=(50, 70)):
 
 def search_spotify(song, artist):
     if "(" in song and ")" in song:
-        song = re.search(r"\((.*?)\)", song).group(1)
-    query = f"{song}+{artist}"
-    res = sp.search(query, type="track", market=MARKET_CODE)
-    if res["tracks"]["total"] == 0:
-        query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
-        res = sp.search(query, type="track", market=MARKET_CODE)
+        song = re.search(r"\((.*?)\)", song, re.UNICODE).group(1)
+        print(song)
+        if "（" in song and "）" in song:
+            song = re.sub("（.*?）", "", song, re.UNICODE)
+    query = f"{song} {artist}"
     print(query)
+    res = sp.search(query, type="track", market=MARKET_CODE)
 
+    # if res["tracks"]["total"] == 0:
+    #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
+    #     res = sp.search(query, type="track", market=MARKET_CODE)
     tracks = [SpotifyTrack(song) for song in res["tracks"]["items"]]
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
