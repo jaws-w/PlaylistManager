@@ -314,6 +314,8 @@ class PlaylistPage(ctk.CTkFrame):
     def __init__(self, controller, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        
+
         self.playlistFm = PlaylistPage.PlaylistFrame(master=self, controller=controller)
         self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -346,11 +348,16 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.songButtons = []
 
-            for tr in playlist.playlist:
-                songBtn = ctk.CTkButton(master=self, text=tr, fg_color="gray")
+            for tr in playlist.playlist.copy():
+                playlistFrame = ctk.CTkFrame(master=self)
+                playlistFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+                songBtn = ctk.CTkButton(master=playlistFrame, text=tr, fg_color="gray", width=60)
                 songBtn.track = tr
                 songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
-                songBtn.pack(side=tk.TOP, fill=tk.X, expand=1)
+                songBtn.pack(side=tk.LEFT)
+                removeBtn = ctk.CTkButton(master=playlistFrame, text='X', width=20, 
+                    command=self.removeSong(tr))
+                removeBtn.pack(side=tk.RIGHT)
                 self.songButtons.append(songBtn)
 
             if self.songButtons:
@@ -364,6 +371,39 @@ class PlaylistPage(ctk.CTkFrame):
                 else:
                     button.configure(fg_color="gray")
             self.master.spotifyFm.search_spotify(btn.track)
+
+        def removeSong(self, tr):
+                playlist.update_playlist(tr)
+                self.load_current_playlist()
+
+        def on_vertical(self, event):
+            self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
+
+        def frameWidth(self, event):
+                print(event.width)
+                self.scroll_canvas.itemconfig(self.w, width=event.width)
+
+        def canvasConfigure(self, event):
+            self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+
+        def createCanvas(self):
+            self.scroll_canvas = ctk.CTkCanvas(master=self, bg="#343638", bd=0, highlightthickness=0)
+            self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+            self.v = tk.Scrollbar(master=self, orient="vertical")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            self.v.config(command=self.scroll_canvas.yview)
+
+            self.scroll_canvas.configure(yscrollcommand=self.v.set)
+            self.scroll_canvas.bind("<Configure>", self.frameWidth)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
+
+            self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+            self.w = self.scroll_canvas.create_window((0, 0), window=self.innerFrame, anchor="nw")
+            self.innerFrame.bind("<Configure>", self.canvasConfigure)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, *args, **kwargs):
@@ -386,6 +426,7 @@ class PlaylistPage(ctk.CTkFrame):
                 print(track.track_title, track.preview_url)
 
                 playBtn = ctk.CTkButton(master=self, text="play")
+                playBtn.configure(command=lambda tr=track: library.playPreview(tr))
                 playBtn.grid(row=i + 1, column=0)
                 titleLabel = ctk.CTkLabel(
                     master=self, text=track.track_title, anchor=tk.W
@@ -398,6 +439,35 @@ class PlaylistPage(ctk.CTkFrame):
                 artistLabel.grid(row=i + 1, column=2, sticky=tk.W)
                 durationLabel = ctk.CTkLabel(master=self, text=track.duration)
                 durationLabel.grid(row=i + 1, column=3)
+
+        def on_vertical(self, event):
+            self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
+        
+        def frameWidth(self, event):
+            print(event.width)
+            self.scroll_canvas.itemconfig(self.w, width=event.width)
+
+        def canvasConfigure(self, event):
+            self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+
+        def createCanvas(self):
+            self.scroll_canvas = ctk.CTkCanvas(master=self, bg="#343638", bd=0, highlightthickness=0)
+            self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+            self.v = tk.Scrollbar(master=self, orient="vertical")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            self.v.config(command=self.scroll_canvas.yview)
+
+            self.scroll_canvas.configure(yscrollcommand=self.v.set)
+            self.scroll_canvas.bind("<Configure>", self.frameWidth)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
+
+            self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+            self.w = self.scroll_canvas.create_window((0, 0), window=self.innerFrame, anchor="nw")
+            self.innerFrame.bind("<Configure>", self.canvasConfigure)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
 
 
 if __name__ == "__main__":

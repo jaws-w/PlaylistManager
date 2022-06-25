@@ -8,6 +8,9 @@ from PIL import Image, ImageTk
 from io import BytesIO
 import re
 
+#to play previews
+import vlc
+
 jikan = Jikan()
 
 load_dotenv()
@@ -89,6 +92,7 @@ class Playlist:
 
 class SpotifyTrack:
     def __init__(self, track) -> None:
+        
         self.track_title = track["name"]
         self.album_name = track["album"]["name"]
         self.album_cover = track["album"]["images"][0]
@@ -101,8 +105,9 @@ class SpotifyTrack:
         seconds = (duration % 60000) // 1000
         return f"{minutes}:{seconds:02d}"
 
-    async def load_preview(self):
-        pass
+    def load_preview(self):
+        p = vlc.MediaPlayer(self.preview_url)
+        p.play()
 
     async def load_album_cover(self):
         pass
