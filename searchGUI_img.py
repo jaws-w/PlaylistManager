@@ -1,5 +1,5 @@
 from doctest import master
-from signal import SIGBREAK
+#from signal import SIGBREAK
 import tkinter as tk
 
 import customtkinter as ctk
@@ -339,19 +339,29 @@ class PlaylistPage(ctk.CTkFrame):
             self.goBackBtn.pack(side=tk.BOTTOM)
 
             self.songButtons = []
+            #self.removeButtons = []
 
         def load_current_playlist(self):
             for btn in self.songButtons:
                 btn.destroy()
+            #for btn in self.removeButtons:
+            #    btn.destroy()
 
             self.songButtons = []
+            #self.removeButtons = []
 
-            for tr in playlist.playlist:
-                songBtn = ctk.CTkButton(master=self, text=tr, fg_color="gray")
+            for tr in playlist.playlist.copy():
+                playlistFrame = ctk.CTkFrame(master=self)
+                playlistFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+                songBtn = ctk.CTkButton(master=playlistFrame, text=tr, fg_color="gray", width=60)
                 songBtn.track = tr
                 songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
-                songBtn.pack(side=tk.TOP, fill=tk.X, expand=1)
+                songBtn.pack(side=tk.LEFT)
+                removeBtn = ctk.CTkButton(master=playlistFrame, text='X', width=20, 
+                    command=lambda t=tr, i=playlistFrame, j=songBtn: self.removeSong(t, i, j))
+                removeBtn.pack(side=tk.RIGHT)
                 self.songButtons.append(songBtn)
+                #self.removeButtons.append(removeBtn)
 
             if self.songButtons:
                 self.songBtnOnClick(self.songButtons[0])
@@ -363,7 +373,49 @@ class PlaylistPage(ctk.CTkFrame):
                     button.configure(fg_color=ThemeManager.theme["color"]["button"])
                 else:
                     button.configure(fg_color="gray")
+            self.activeBtn = btn
             self.master.spotifyFm.search_spotify(btn.track)
+
+        def removeSong(self, tr, playlistFrame, songBtn):
+                playlist.update_playlist(tr)
+                playlistFrame.destroy()
+                self.songButtons.remove(songBtn)
+                if self.songButtons:
+                    if songBtn==self.activeBtn:
+                        self.songBtnOnClick(self.songButtons[0])
+                else:
+                    self.master.spotifyFm.clearSearch()
+                    # means playlist is now empty
+                    #might need to put label here to say to add more songs
+
+        def on_vertical(self, event):
+            self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
+
+        def frameWidth(self, event):
+                print(event.width)
+                self.scroll_canvas.itemconfig(self.w, width=event.width)
+
+        def canvasConfigure(self, event):
+            self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+
+        def createCanvas(self):
+            self.scroll_canvas = ctk.CTkCanvas(master=self, bg="#343638", bd=0, highlightthickness=0)
+            self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+            self.v = tk.Scrollbar(master=self, orient="vertical")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            self.v.config(command=self.scroll_canvas.yview)
+
+            self.scroll_canvas.configure(yscrollcommand=self.v.set)
+            self.scroll_canvas.bind("<Configure>", self.frameWidth)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
+
+            self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+            self.w = self.scroll_canvas.create_window((0, 0), window=self.innerFrame, anchor="nw")
+            self.innerFrame.bind("<Configure>", self.canvasConfigure)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, *args, **kwargs):
@@ -386,6 +438,7 @@ class PlaylistPage(ctk.CTkFrame):
                 print(track.track_title, track.preview_url)
 
                 playBtn = ctk.CTkButton(master=self, text="play")
+                playBtn.configure(command=lambda tr=track: library.playPreview(tr))
                 playBtn.grid(row=i + 1, column=0)
                 titleLabel = ctk.CTkLabel(
                     master=self, text=track.track_title, anchor=tk.W
@@ -398,6 +451,39 @@ class PlaylistPage(ctk.CTkFrame):
                 artistLabel.grid(row=i + 1, column=2, sticky=tk.W)
                 durationLabel = ctk.CTkLabel(master=self, text=track.duration)
                 durationLabel.grid(row=i + 1, column=3)
+
+        def clearSearch(self):
+            for child in self.winfo_children():
+                child.destroy()
+
+        def on_vertical(self, event):
+            self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
+        
+        def frameWidth(self, event):
+            print(event.width)
+            self.scroll_canvas.itemconfig(self.w, width=event.width)
+
+        def canvasConfigure(self, event):
+            self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+
+        def createCanvas(self):
+            self.scroll_canvas = ctk.CTkCanvas(master=self, bg="#343638", bd=0, highlightthickness=0)
+            self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+            self.v = tk.Scrollbar(master=self, orient="vertical")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            self.v.config(command=self.scroll_canvas.yview)
+
+            self.scroll_canvas.configure(yscrollcommand=self.v.set)
+            self.scroll_canvas.bind("<Configure>", self.frameWidth)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
+
+            self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+            self.w = self.scroll_canvas.create_window((0, 0), window=self.innerFrame, anchor="nw")
+            self.innerFrame.bind("<Configure>", self.canvasConfigure)
+
+            self.scroll_canvas.bind_all("<MouseWheel>", self.on_vertical)
 
 
 if __name__ == "__main__":
