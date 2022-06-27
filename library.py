@@ -67,7 +67,7 @@ def search_spotify(song, artist):
             song = re.sub("（.*?）", "", song, re.UNICODE)
     query = f"{song} {artist}"
     print(query)
-    res = sp.search(query, type="track", market=MARKET_CODE)
+    res = sp.search(query, type="track", market=MARKET_CODE, limit=50)
 
     # if res["tracks"]["total"] == 0:
     #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
