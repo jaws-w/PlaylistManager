@@ -1,3 +1,7 @@
+from doctest import master
+from textwrap import fill
+
+# from signal import SIGBREAK
 import tkinter as tk
 
 import customtkinter as ctk
@@ -194,14 +198,13 @@ class AnimeList(ctk.CTkFrame):
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
             if result_num <= 0:
                 prevButton.config(state="disabled", fg_color="gray")
-            # if result_num >= self.search_result["last_page"] > 10:
-            if result_num >= self.search_result["pagination"]["last_visible_page"] * 5:
+            if result_num >= self.search_result["last_page"] > 10:
                 nextButton.config(state="disabled", fg_color="gray")
 
             # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
             try:
-                for i in range(self.result_num * 25, (self.result_num + 1) * 25):
-                    res = self.search_result["data"][i % 25]
+                for i in range(self.result_num * 10, (self.result_num + 1) * 10):
+                    res = self.search_result["results"][i % 50]
                     if res["mal_id"] not in self.cachedFrames:
                         animeFrame = AnimeResult(master=self.innerFrame, anime=res)
                         asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
@@ -215,30 +218,14 @@ class AnimeList(ctk.CTkFrame):
                     app.update()
             except IndexError:
                 nextButton.config(state="disabled", fg_color="gray")
-            # try:
-            #     for i in range(self.result_num * 10, (self.result_num + 1) * 10):
-            #         res = self.search_result["results"][i % 50]
-            #         if res["mal_id"] not in self.cachedFrames:
-            #             animeFrame = AnimeResult(master=self.innerFrame, anime=res)
-            #             asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
-
-            #             self.cachedFrames[res["mal_id"]] = animeFrame
-            #         else:
-            #             animeFrame = self.cachedFrames[res["mal_id"]]
-
-            #         animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
-
-            #         app.update()
-            # except IndexError:
-            #     nextButton.config(state="disabled", fg_color="gray")
 
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
             app.update()
 
     def diffPage(self, query, pagenum, result_num):
-        if result_num >= pagenum:
+        if result_num >= 5 * pagenum:
             asyncio.run(self.search(query, pagenum + 1, result_num))
-        elif result_num < (pagenum - 1):
+        elif result_num < 5 * (pagenum - 1):
             asyncio.run(self.search(query, pagenum - 1, result_num))
         else:
             asyncio.run(self.search(query, pagenum, result_num))
@@ -496,7 +483,7 @@ class PlaylistPage(ctk.CTkFrame):
 
         def search_spotify(self, track):
             for child in self.innerFrame.winfo_children():
-
+               
                 child.destroy()
 
             self.label.configure(

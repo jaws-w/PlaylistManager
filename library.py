@@ -25,18 +25,9 @@ sp = spotipy.Spotify(auth_manager=spPKCE)
 # user_id = sp.current_user()['id']
 
 
-# def search_anime(anime_title, page, parameters):
-#     print(f"Searching for page {page} of {anime_title}")
-#     return jikan.search("anime", anime_title, page=page, parameters=parameters)
-
-
-def search_anime(anime_title: str, page, parameters):
-    api_endpoint = "http://staging.jikan.moe/v4/anime"
-    query = f"?q={anime_title}&sfw&page={page}"
-
-    resp = requests.get(api_endpoint + query)
-    print(resp.json())
-    return resp.json()
+def search_anime(anime_title, page, parameters):
+    print(f"Searching for page {page} of {anime_title}")
+    return jikan.search("anime", anime_title, page=page, parameters=parameters)
 
 
 def parse_track(track):
@@ -61,7 +52,7 @@ def get_songs(anime):
 
 
 async def set_image(anime, target, size=(50, 70)):
-    imgRes = requests.get(anime["images"]['jpg']['image_url'])
+    imgRes = requests.get(anime["image_url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
