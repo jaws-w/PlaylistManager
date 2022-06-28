@@ -28,7 +28,7 @@ sp = spotipy.Spotify(auth_manager=spPKCE)
 user_id = sp.current_user()["id"]
 
 
-def create_scroll_canvas(master, frameWidth, on_vertical, canvasConfigure):
+def create_scroll_canvas(master):
     scroll_canvas = ctk.CTkCanvas(
         master=master, bg="#343638", bd=0, highlightthickness=0
     )
@@ -39,17 +39,32 @@ def create_scroll_canvas(master, frameWidth, on_vertical, canvasConfigure):
     v.config(command=scroll_canvas.yview)
 
     scroll_canvas.configure(yscrollcommand=v.set)
-    scroll_canvas.bind("<Configure>", frameWidth)
 
-    scroll_canvas.bind_all("<MouseWheel>", on_vertical)
+    scroll_canvas.bind_all(
+        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
+    )
 
     innerFrame = ctk.CTkFrame(master=scroll_canvas)
     w = scroll_canvas.create_window((0, 0), window=innerFrame, anchor="nw")
-    innerFrame.bind("<Configure>", canvasConfigure)
+    innerFrame.bind("<Configure>", lambda event: canvasConfigure(scroll_canvas, event))
+    scroll_canvas.bind("<Configure>", lambda event: frameWidth(scroll_canvas, w, event))
 
-    scroll_canvas.bind_all("<MouseWheel>", on_vertical)
+    scroll_canvas.bind_all("<MouseWheel>", lambda event: on_vertical(scroll_canvas, event))
 
     return scroll_canvas, w, innerFrame
+
+
+def frameWidth(scroll_canvas, w, event):
+    scroll_canvas.itemconfig(w, width=event.width)
+
+
+def canvasConfigure(scroll_canvas, event):
+    scroll_canvas.configure(scrollregion=scroll_canvas.bbox("all"))
+
+
+# enable trackpad/mousewheel scrolling
+def on_vertical(scroll_canvas, event):
+    scroll_canvas.yview_scroll(-1 * event.delta, "units")
 
 
 # def search_anime(anime_title, page, parameters):

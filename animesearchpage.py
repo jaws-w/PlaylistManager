@@ -69,29 +69,22 @@ class AnimeList(ctk.CTkFrame):
         self.pagenum = 0
         self.result_num = -1
 
-        # self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
-        #     master=self
-        # )
-
         self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
-            master=self,
-            frameWidth=self.frameWidth,
-            on_vertical=self.on_vertical,
-            canvasConfigure=self.canvasConfigure,
+            master=self
         )
 
         self.cachedFrames = dict()
         self.loadedPages = 0
 
-    def frameWidth(self, event):
-        self.scroll_canvas.itemconfig(self.w, width=event.width)
+    # def frameWidth(self, event):
+    #     self.scroll_canvas.itemconfig(self.w, width=event.width)
 
-    def canvasConfigure(self, event):
-        self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+    # def canvasConfigure(self, event):
+    #     self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
 
-    # enable trackpad/mousewheel scrolling
-    def on_vertical(self, event):
-        self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
+    # # enable trackpad/mousewheel scrolling
+    # def on_vertical(self, event):
+    #     self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
 
     async def search(self, query, pagenum, result_num):
         print("result=", result_num)
