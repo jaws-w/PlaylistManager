@@ -22,12 +22,20 @@ spPKCE = SpotifyPKCE(
 )
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
-# user_id = sp.current_user()['id']
+user_id = sp.current_user()['id']
+
+# def search_anime(anime_title, page, parameters):
+#     print(f"Searching for page {page} of {anime_title}")
+#     return jikan.search("anime", anime_title, page=page, parameters=parameters)
 
 
-def search_anime(anime_title, page, parameters):
-    print(f"Searching for page {page} of {anime_title}")
-    return jikan.search("anime", anime_title, page=page, parameters=parameters)
+def search_anime(anime_title: str, page, parameters):
+    api_endpoint = "http://staging.jikan.moe/v4/anime"
+    query = f"?q={anime_title}&sfw&page={page}"
+
+    resp = requests.get(api_endpoint + query)
+    # print(resp.json())
+    return resp.json()
 
 
 def parse_track(track):
@@ -52,7 +60,7 @@ def get_songs(anime):
 
 
 async def set_image(anime, target, size=(50, 70)):
-    imgRes = requests.get(anime["image_url"])
+    imgRes = requests.get(anime["images"]["jpg"]["image_url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
@@ -75,6 +83,18 @@ def search_spotify(song, artist):
     tracks = [SpotifyTrack(song) for song in res["tracks"]["items"]]
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
+def addPlaylist(final_playlist):
+    spotify_playlist = sp.user_playlist_create(
+        user_id, 
+        name="testing playlist", 
+        public=False, 
+        collaborative=False
+        #description=
+        )
+    sp.playlist_add_items(playlist_id=spotify_playlist['id'], 
+           items=[track.id for track in final_playlist])
+    
+
 
 class Playlist:
     def __init__(self) -> None:
@@ -95,6 +115,7 @@ class SpotifyTrack:
         self.duration = SpotifyTrack.ms_to_min_sec(track["duration_ms"])
         self.artists = [artist["name"] for artist in track["artists"]]
         self.preview_url = track["preview_url"]
+        self.id = track["id"]
 
     def ms_to_min_sec(duration):
         minutes = duration // 60000
@@ -106,3 +127,4 @@ class SpotifyTrack:
 
     async def load_album_cover(self):
         pass
+
