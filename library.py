@@ -8,6 +8,9 @@ from PIL import Image, ImageTk
 from io import BytesIO
 import re
 
+import customtkinter as ctk
+import tkinter as tk
+
 jikan = Jikan()
 
 load_dotenv()
@@ -22,7 +25,32 @@ spPKCE = SpotifyPKCE(
 )
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
-user_id = sp.current_user()['id']
+user_id = sp.current_user()["id"]
+
+
+def create_scroll_canvas(master, frameWidth, on_vertical, canvasConfigure):
+    scroll_canvas = ctk.CTkCanvas(
+        master=master, bg="#343638", bd=0, highlightthickness=0
+    )
+    scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+    v = tk.Scrollbar(master=master, orient="vertical")
+    v.pack(side=tk.RIGHT, fill=tk.Y)
+    v.config(command=scroll_canvas.yview)
+
+    scroll_canvas.configure(yscrollcommand=v.set)
+    scroll_canvas.bind("<Configure>", frameWidth)
+
+    scroll_canvas.bind_all("<MouseWheel>", on_vertical)
+
+    innerFrame = ctk.CTkFrame(master=scroll_canvas)
+    w = scroll_canvas.create_window((0, 0), window=innerFrame, anchor="nw")
+    innerFrame.bind("<Configure>", canvasConfigure)
+
+    scroll_canvas.bind_all("<MouseWheel>", on_vertical)
+
+    return scroll_canvas, w, innerFrame
+
 
 # def search_anime(anime_title, page, parameters):
 #     print(f"Searching for page {page} of {anime_title}")
@@ -83,17 +111,18 @@ def search_spotify(song, artist):
     tracks = [SpotifyTrack(song) for song in res["tracks"]["items"]]
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
+
 def addPlaylist(final_playlist):
     spotify_playlist = sp.user_playlist_create(
-        user_id, 
-        name="testing playlist", 
-        public=False, 
+        user_id,
+        name="testing playlist",
+        public=False,
         collaborative=False
-        #description=
-        )
-    sp.playlist_add_items(playlist_id=spotify_playlist['id'], 
-           items=[track.id for track in final_playlist])
-    
+        # description=
+    )
+    sp.playlist_add_items(
+        playlist_id=spotify_playlist["id"], items=[track.id for track in final_playlist]
+    )
 
 
 class Playlist:
@@ -127,4 +156,3 @@ class SpotifyTrack:
 
     async def load_album_cover(self):
         pass
-
