@@ -76,16 +76,6 @@ class AnimeList(ctk.CTkFrame):
         self.cachedFrames = dict()
         self.loadedPages = 0
 
-    # def frameWidth(self, event):
-    #     self.scroll_canvas.itemconfig(self.w, width=event.width)
-
-    # def canvasConfigure(self, event):
-    #     self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
-
-    # # enable trackpad/mousewheel scrolling
-    # def on_vertical(self, event):
-    #     self.scroll_canvas.yview_scroll(-1 * event.delta, "units")
-
     async def search(self, query, pagenum, result_num):
         print("result=", result_num)
         print("page=", pagenum)

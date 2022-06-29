@@ -124,12 +124,6 @@ class PlaylistPage(ctk.CTkFrame):
                 text="Searching for {} by {} on Spotify".format(track[0], track[1])
             )
 
-            # label = ctk.CTkLabel(
-            #     master=self,
-            #     text="Searching for {} by {} on Spotify".format(track[0], track[1]),
-            # )
-            # label.grid(row=0, column=0, columnspan=4, sticky=tk.EW)
-
             response = library.search_spotify(track[0], track[1])
             self.previous, self.next, self.tracks = response
 
@@ -143,9 +137,7 @@ class PlaylistPage(ctk.CTkFrame):
                 addtoPlaylist = ctk.CTkButton(
                     master=self.innerFrame, text="add", width=60
                 )
-                addtoPlaylist.configure(
-                    command=lambda tr=track: self.root.final_playlist.append(tr)
-                )
+                addtoPlaylist.configure(command=lambda tr=track: self.add_song(tr))
                 addtoPlaylist.grid(row=i, column=1)
 
                 titleLabel = ctk.CTkLabel(
@@ -184,3 +176,8 @@ class PlaylistPage(ctk.CTkFrame):
         def clearSearch(self):
             for child in self.winfo_children():
                 child.destroy()
+
+        def add_song(self, track):
+            print(track)
+            self.root.final_playlist.append(track)
+            self.root.frames["SpotifyPage"].playlistReviewFm.update()

@@ -16,7 +16,7 @@ jikan = Jikan()
 load_dotenv()
 
 MARKET_CODE = "us"
-scope = "playlist-modify-private"
+scope = "playlist-read-private playlist-modify-public playlist-modify-private"
 SPOTIPY_CLIENT_ID = "baffaf7266d04894a474288165840d28"
 SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
 
@@ -49,7 +49,9 @@ def create_scroll_canvas(master):
     innerFrame.bind("<Configure>", lambda event: canvasConfigure(scroll_canvas, event))
     scroll_canvas.bind("<Configure>", lambda event: frameWidth(scroll_canvas, w, event))
 
-    scroll_canvas.bind_all("<MouseWheel>", lambda event: on_vertical(scroll_canvas, event))
+    scroll_canvas.bind_all(
+        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
+    )
 
     return scroll_canvas, w, innerFrame
 
@@ -127,17 +129,36 @@ def search_spotify(song, artist):
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
 
-def addPlaylist(final_playlist):
-    spotify_playlist = sp.user_playlist_create(
+def get_user_playlists():
+    return sp.current_user_playlists()
+
+
+def new_playlist(title):
+    return sp.user_playlist_create(
         user_id,
-        name="testing playlist",
+        name=title,
         public=False,
-        collaborative=False
-        # description=
+        collaborative=False,
+        # description="hi",
     )
-    sp.playlist_add_items(
-        playlist_id=spotify_playlist["id"], items=[track.id for track in final_playlist]
-    )
+
+
+def get_playlist(id):
+    return sp.playlist(id)
+
+
+def addPlaylist(spotify_playlist, final_playlist):
+    # spotify_playlist = sp.user_playlist_create(
+    #     user_id,
+    #     name="testing playlist",
+    #     public=False,
+    #     collaborative=False,
+    #     description="hi",
+    # )
+    print(spotify_playlist["id"])
+    items = [track.id for track in final_playlist]
+    print(items)
+    sp.playlist_add_items(playlist_id=spotify_playlist["id"], items=items)
 
 
 class Playlist:

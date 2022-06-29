@@ -33,7 +33,8 @@ class tkinterApp(ctk.CTk):
             self.frames[page.__name__] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
 
-        self.show_frame("AnimeSearchPage")
+        # self.show_frame("AnimeSearchPage")
+        self.show_frame("SpotifyPage")
 
     def show_frame(self, cont):
 
@@ -44,6 +45,6 @@ class tkinterApp(ctk.CTk):
 
 
 if __name__ == "__main__":
-    
+
     app = tkinterApp()
     app.mainloop()
