@@ -26,7 +26,7 @@ class SpotifyPage(ctk.CTkFrame):
             dummyFrame = ctk.CTkFrame(master=self)
             dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-            self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
                 master=dummyFrame
             )
 
@@ -92,7 +92,7 @@ class SpotifyPage(ctk.CTkFrame):
             self.titleBar.pack(side=tk.TOP)
 
             dummyFrame_1 = ctk.CTkFrame(master=self)
-            _, _, innerFrame = library.create_scroll_canvas(master=dummyFrame_1)
+            scroll_canvas, innerFrame = library.create_scroll_canvas(master=dummyFrame_1)
             self.load_playlists(innerFrame)
 
             dummyFrame_2 = ctk.CTkFrame(master=self)

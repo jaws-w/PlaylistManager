@@ -69,9 +69,7 @@ class AnimeList(ctk.CTkFrame):
         self.pagenum = 0
         self.result_num = -1
 
-        self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
-            master=self
-        )
+        self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=self)
 
         self.cachedFrames = dict()
         self.loadedPages = 0

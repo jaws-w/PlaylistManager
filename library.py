@@ -11,6 +11,8 @@ import re
 import customtkinter as ctk
 import tkinter as tk
 
+import os
+
 jikan = Jikan()
 
 load_dotenv()
@@ -26,6 +28,11 @@ spPKCE = SpotifyPKCE(
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
 user_id = sp.current_user()["id"]
+print(sp.current_user())
+
+
+def log_out_spotify():
+    os.remove(".cache")
 
 
 def create_scroll_canvas(master):
@@ -53,7 +60,7 @@ def create_scroll_canvas(master):
         "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
     )
 
-    return scroll_canvas, w, innerFrame
+    return scroll_canvas, innerFrame
 
 
 def frameWidth(scroll_canvas, w, event):
@@ -110,6 +117,7 @@ async def set_image(anime, target, size=(50, 70)):
     target.configure(image=img)
     target.image = img
     print(f'Image fetched for {anime["title"]}')
+    target.update()
 
 
 def search_spotify(song, artist):

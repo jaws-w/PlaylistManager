@@ -46,9 +46,7 @@ class PlaylistPage(ctk.CTkFrame):
             dummyFrame = ctk.CTkFrame(master=self)
             dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-            self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
-                master=dummyFrame
-            )
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=dummyFrame)
 
             self.songButtons = []
 
@@ -111,9 +109,7 @@ class PlaylistPage(ctk.CTkFrame):
             self.label = ctk.CTkLabel(master=self, text="Add tracks to search!")
             self.label.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-            self.scroll_canvas, self.w, self.innerFrame = library.create_scroll_canvas(
-                master=self
-            )
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=self)
 
         def search_spotify(self, track):
             for child in self.innerFrame.winfo_children():
