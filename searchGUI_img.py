@@ -28,18 +28,25 @@ class tkinterApp(ctk.CTk):
         masterFrame.pack(side=tk.TOP, fill="both", expand=True)
 
         self.frames = {}
-        for page in (animesearchpage.AnimeSearchPage, playlistpage.PlaylistPage, spotifypage.SpotifyPage):
+        for page in (
+            animesearchpage.AnimeSearchPage,
+            playlistpage.PlaylistPage,
+            spotifypage.SpotifyPage,
+        ):
             frame = page(master=masterFrame, root=self)
             self.frames[page.__name__] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
+
+        self.playlist.playlistPage = self.frames["PlaylistPage"]
+        self.playlist.animePage = self.frames["AnimeSearchPage"]
 
         self.show_frame("AnimeSearchPage")
         # self.show_frame("SpotifyPage")
 
     def show_frame(self, page: str) -> None:
         frame = self.frames[page]
-        if page == "PlaylistPage":
-            frame.playlistFm.load_current_playlist()
+        # if page == "PlaylistPage":
+        #     frame.playlistFm.load_current_playlist()
         frame.tkraise()
 
 

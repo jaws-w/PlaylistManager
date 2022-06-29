@@ -16,6 +16,7 @@ class SpotifyPage(ctk.CTkFrame):
 
         self.columnconfigure(0, weight=1, uniform="group1")
         self.columnconfigure(1, weight=1, uniform="group1")
+        self.rowconfigure(0, weight=1)
 
     class PlaylistReview(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -92,7 +93,9 @@ class SpotifyPage(ctk.CTkFrame):
             self.titleBar.pack(side=tk.TOP)
 
             dummyFrame_1 = ctk.CTkFrame(master=self)
-            scroll_canvas, innerFrame = library.create_scroll_canvas(master=dummyFrame_1)
+            scroll_canvas, innerFrame = library.create_scroll_canvas(
+                master=dummyFrame_1
+            )
             self.load_playlists(innerFrame)
 
             dummyFrame_2 = ctk.CTkFrame(master=self)

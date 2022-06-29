@@ -93,7 +93,8 @@ def search_anime(anime_title: str, page: int):
 def parse_track(track):
     info = re.split('"+|by', track)
     title = info[1]
-    artist = info[3].split("\xa0")[0][1:]
+    artist = info[3].split("(")[0][1:-1]
+    print(f"{title} by {artist}")
     return (title, artist)
 
 
@@ -186,13 +187,24 @@ def addPlaylist(spotify_playlist, final_playlist):
 
 class Playlist:
     def __init__(self) -> None:
-        self.playlist = set()
+        self.playlist = dict()
+        self.playlistPage = None
+        self.animePage = None
 
     def update_playlist(self, tr):
-        if tr in self.playlist:
-            self.playlist.remove(tr)
+        # if tr in self.playlist:
+        #     self.playlist.remove(tr)
+        # else:
+        #     self.playlist.add(tr)
+        if tr in self.playlist.keys():
+            self.playlist[tr].destroy()
+            self.playlist.pop(tr)
         else:
-            self.playlist.add(tr)
+            track_frame = self.playlistPage.playlistFm.add_song_button(tr)
+            self.playlist[tr] = track_frame
+
+        self.playlistPage.update()
+        self.animePage.update_buttons()
 
 
 class SpotifyTrack:

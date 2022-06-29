@@ -1,3 +1,4 @@
+from doctest import master
 import customtkinter as ctk
 import tkinter as tk
 from customtkinter import ThemeManager
@@ -17,6 +18,7 @@ class PlaylistPage(ctk.CTkFrame):
 
         self.columnconfigure(0, weight=1, uniform="group1")
         self.columnconfigure(1, weight=1, uniform="group1")
+        self.rowconfigure(0, weight=1)
 
         self.goBackBtn = ctk.CTkButton(
             master=self,
@@ -40,66 +42,47 @@ class PlaylistPage(ctk.CTkFrame):
             super().__init__(*args, **kwargs)
             self.root = root
 
-            title = ctk.CTkLabel(master=self, pady=20, text="Your Playlist")
+            title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
             title.pack(side=tk.TOP)
 
             dummyFrame = ctk.CTkFrame(master=self)
             dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=dummyFrame)
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
+                master=dummyFrame
+            )
 
-            self.songButtons = []
+        def add_song_button(self, track):
 
-        def load_current_playlist(self):
-            for btn in self.songButtons:
-                btn.destroy()
+            buttonHolderFrame = ctk.CTkFrame(master=self.innerFrame)
+            songBtn = ctk.CTkButton(
+                master=buttonHolderFrame, text=track, fg_color="gray", width=60
+            )
+            songBtn.track = track
+            songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
+            songBtn.pack(side=tk.LEFT)
+            buttonHolderFrame.songBtn = songBtn
+            removeBtn = ctk.CTkButton(
+                master=buttonHolderFrame,
+                text="X",
+                width=20,
+                command=lambda t=track: self.root.playlist.update_playlist(t),
+            )
+            removeBtn.pack(side=tk.RIGHT)
+            buttonHolderFrame.pack()
 
-            self.songButtons = []
-
-            for tr in self.root.playlist.playlist.copy():
-                playlistFrame = ctk.CTkFrame(master=self.innerFrame)
-                playlistFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
-                songBtn = ctk.CTkButton(
-                    master=playlistFrame, text=tr, fg_color="gray", width=60
-                )
-                songBtn.track = tr
-                songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
-                songBtn.pack(side=tk.LEFT)
-                removeBtn = ctk.CTkButton(
-                    master=playlistFrame,
-                    text="X",
-                    width=20,
-                    command=lambda t=tr, i=playlistFrame, j=songBtn: self.removeSong(
-                        t, i, j
-                    ),
-                )
-                removeBtn.pack(side=tk.RIGHT)
-                self.songButtons.append(songBtn)
-
-            if self.songButtons:
-                self.songBtnOnClick(self.songButtons[0])
+            return buttonHolderFrame
 
         def songBtnOnClick(self, btn):
             print(btn.track)
-            for button in self.songButtons:
+            for frame in self.root.playlist.playlist.values():
+                button = frame.songBtn
                 if button is btn:
                     button.configure(fg_color=ThemeManager.theme["color"]["button"])
                 else:
                     button.configure(fg_color="gray")
             self.activeBtn = btn
             self.master.spotifyFm.search_spotify(btn.track)
-
-        def removeSong(self, tr, playlistFrame, songBtn):
-            self.master.playlist.update_playlist(tr)
-            playlistFrame.destroy()
-            self.songButtons.remove(songBtn)
-            if self.songButtons:
-                if songBtn == self.activeBtn:
-                    self.songBtnOnClick(self.songButtons[0])
-            else:
-                self.master.spotifyFm.clearSearch()
-                # means playlist is now empty
-                # might need to put label here to say to add more songs
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -109,7 +92,9 @@ class PlaylistPage(ctk.CTkFrame):
             self.label = ctk.CTkLabel(master=self, text="Add tracks to search!")
             self.label.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=self)
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
+                master=self
+            )
 
         def search_spotify(self, track):
             for child in self.innerFrame.winfo_children():
