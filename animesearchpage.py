@@ -1,14 +1,16 @@
 import customtkinter as ctk
 import tkinter as tk
+
 from customtkinter import ThemeManager
 
 import library
 
 import asyncio
+import searchGUI_img
 
 
 class AnimeSearchPage(ctk.CTkFrame):
-    def __init__(self, root, *args, **kwargs):
+    def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.searchFm = ctk.CTkFrame(master=self, height=28)
@@ -23,7 +25,7 @@ class AnimeSearchPage(ctk.CTkFrame):
         self.searchBtn = ctk.CTkButton(
             master=self.searchFm, text="search", command=self.searchAnime
         )
-        self.bind_all("<Return>", self.searchAnimeReturn)
+        self.bind_all("<Return>", self.searchAnime)
         self.searchBtn.pack(padx=20, expand=False, side=tk.LEFT)
 
         self.goToPlaylist = ctk.CTkButton(
@@ -33,7 +35,7 @@ class AnimeSearchPage(ctk.CTkFrame):
         )
         self.goToPlaylist.pack(padx=20, side=tk.LEFT)
 
-    def searchAnime(self):
+    def searchAnime(self, event=None) -> None:
         print("button pressed")
         anime_title = self.searchBar.get()
         if anime_title != "":
@@ -43,48 +45,28 @@ class AnimeSearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1, 0))
-
-    # searchAnime when return key is pressed
-    def searchAnimeReturn(self, event):
-        print("button pressed")
-        anime_title = self.searchBar.get()
-        if anime_title != "":
-
-            print(anime_title)
-
-            self.searchFm.pack(pady=50)
-
-            self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1, 0))
+            asyncio.run(self.animesList.search(anime_title, 1))
 
 
 class AnimeList(ctk.CTkFrame):
-    def __init__(self, root, *args, **kwargs):
+    def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.root = root
 
         self.query = None
-        self.pagenum = 0
-        self.result_num = -1
+        self.page_num = 0
 
         self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=self)
 
         self.cachedFrames = dict()
         self.loadedPages = 0
 
-    async def search(self, query, pagenum, result_num):
-        print("result=", result_num)
-        print("page=", pagenum)
+    async def search(self, query, page_num):
+        print("page=", page_num)
 
-        if self.query != query or self.pagenum != pagenum:
-            self.search_result = library.search_anime(
-                query, pagenum, parameters={"rated": ["g", "pg", "pg13", "r17"]}
-            )
-            self.result_num = -1
-
-        if self.result_num != result_num:
+        if self.query != query or self.page_num != page_num:
+            self.search_result = library.search_anime(query, page_num)
 
             print("new search")
             for child in self.innerFrame.winfo_children():
@@ -94,57 +76,51 @@ class AnimeList(ctk.CTkFrame):
             self.scroll_canvas.yview_moveto("0.0")
 
             self.query = query
-            self.pagenum = pagenum
-            self.result_num = result_num
+            self.page_num = page_num
 
             buttonHolder = ctk.CTkFrame(master=self.innerFrame)
             prevButton = ctk.CTkButton(
                 master=buttonHolder,
                 text="<",
-                command=lambda: self.diffPage(query, pagenum, result_num - 1),
+                command=lambda: self.diffPage(query, self.page_num - 1),
             )
             nextButton = ctk.CTkButton(
                 master=buttonHolder,
                 text=">",
-                command=lambda: self.diffPage(query, pagenum, result_num + 1),
+                command=lambda: self.diffPage(query, self.page_num + 1),
             )
             prevButton.pack(side=tk.LEFT, fill=tk.X, expand=1)
             nextButton.pack(side=tk.RIGHT, fill=tk.X, expand=1)
-            if result_num <= 0:
+            if page_num <= 1:
                 prevButton.config(state="disabled", fg_color="gray")
-            if result_num >= self.search_result["pagination"]["last_visible_page"] * 5:
+
+            # note pagination currently not working
+            # if not self.search_result["pagination"]["has_next_page"]:
+            if self.search_result["pagination"]["items"]["count"] < 25:
                 nextButton.config(state="disabled", fg_color="gray")
+            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1, ipady=10)
 
             # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
-            try:
-                for i in range(self.result_num * 25, (self.result_num + 1) * 25):
-                    res = self.search_result["data"][i % 25]
-                    if res["mal_id"] not in self.cachedFrames:
-                        animeFrame = AnimeResult(
-                            master=self.innerFrame, anime=res, root=self.root
-                        )
-                        asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
+            for res in self.search_result["data"]:
+                # res = self.search_result["data"][i % 25]
+                if res["mal_id"] not in self.cachedFrames:
+                    animeFrame = AnimeResult(
+                        master=self.innerFrame, anime=res, root=self.root
+                    )
 
-                        self.cachedFrames[res["mal_id"]] = animeFrame
-                    else:
-                        animeFrame = self.cachedFrames[res["mal_id"]]
+                    asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
 
-                    animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+                    self.cachedFrames[res["mal_id"]] = animeFrame
+                else:
+                    animeFrame = self.cachedFrames[res["mal_id"]]
 
-                    self.master.update()
-            except IndexError:
-                nextButton.config(state="disabled", fg_color="gray")
+                animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-            buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
-            self.master.update()
+                self.master.update()
 
-    def diffPage(self, query, pagenum, result_num):
-        if result_num >= pagenum:
-            asyncio.run(self.search(query, pagenum + 1, result_num))
-        elif result_num < (pagenum - 1):
-            asyncio.run(self.search(query, pagenum - 1, result_num))
-        else:
-            asyncio.run(self.search(query, pagenum, result_num))
+    def diffPage(self, query, pagenum):
+
+        asyncio.run(self.search(query, pagenum))
 
 
 # Class for displaying anime

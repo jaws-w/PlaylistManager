@@ -13,7 +13,7 @@ import tkinter as tk
 
 import os
 
-jikan = Jikan()
+# jikan = Jikan()
 
 load_dotenv()
 
@@ -81,7 +81,7 @@ def on_vertical(scroll_canvas, event):
 #     return jikan.search("anime", anime_title, page=page, parameters=parameters)
 
 
-def search_anime(anime_title: str, page, parameters):
+def search_anime(anime_title: str, page: int):
     api_endpoint = "http://staging.jikan.moe/v4/anime"
     query = f"?q={anime_title}&sfw&page={page}"
 
@@ -91,23 +91,38 @@ def search_anime(anime_title: str, page, parameters):
 
 
 def parse_track(track):
-    info = re.split('"|by', track)
+    info = re.split('"+|by', track)
     title = info[1]
     artist = info[3].split("\xa0")[0][1:]
     return (title, artist)
 
 
+# def get_songs(anime):
+#     anime_res = jikan.anime(anime["mal_id"])
+#     ops = []
+#     eds = []
+
+#     for tr in anime_res["opening_themes"]:
+#         ops.append(parse_track(tr))
+
+#     for tr in anime_res["ending_themes"]:
+#         eds.append(parse_track(tr))
+
+#     return {"openings": ops, "endings": eds}
+
+
 def get_songs(anime):
-    anime_res = jikan.anime(anime["mal_id"])
+    api_endpoint = f'https://api.jikan.moe/v4/anime/{anime["mal_id"]}/themes'
+    resp = requests.get(api_endpoint)
+    if resp.status_code != 200:
+        return {"openings": [], "endings": []}
+    resp_js = resp.json()
     ops = []
     eds = []
-
-    for tr in anime_res["opening_themes"]:
+    for tr in resp_js["data"]["openings"]:
         ops.append(parse_track(tr))
-
-    for tr in anime_res["ending_themes"]:
+    for tr in resp_js["data"]["endings"]:
         eds.append(parse_track(tr))
-
     return {"openings": ops, "endings": eds}
 
 
