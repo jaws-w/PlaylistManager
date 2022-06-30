@@ -3,9 +3,10 @@ from jikanpy import Jikan
 from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
-#from playsound import playsound
-#import pyaudio
-#import wave
+
+# from playsound import playsound
+# import pyaudio
+# import wave
 import time
 import vlc
 
@@ -100,6 +101,10 @@ def parse_track(track):
     title = info[1]
     artist = info[3].split("(")[0][1:-1]
     print(f"{title} by {artist}")
+    if title == '' or artist == '':
+        print(f'parsing {track} failed')
+        raise ValueError
+        
     return (title, artist)
 
 
@@ -126,9 +131,15 @@ def get_songs(anime):
     ops = []
     eds = []
     for tr in resp_js["data"]["openings"]:
-        ops.append(parse_track(tr))
+        try:
+            ops.append(parse_track(tr))
+        except ValueError:
+            pass
     for tr in resp_js["data"]["endings"]:
-        eds.append(parse_track(tr))
+        try:
+            eds.append(parse_track(tr))
+        except ValueError:
+            pass
     return {"openings": ops, "endings": eds}
 
 
@@ -196,7 +207,7 @@ class Playlist:
         self.playlistPage = None
         self.animePage = None
 
-    def update_playlist(self, tr):
+    def update_playlist(self, tr, update_buttons=True):
         # if tr in self.playlist:
         #     self.playlist.remove(tr)
         # else:
@@ -209,7 +220,8 @@ class Playlist:
             self.playlist[tr] = track_frame
 
         self.playlistPage.update()
-        self.animePage.update_buttons()
+        if update_buttons:
+            self.animePage.update_buttons()
 
 
 class SpotifyTrack:
@@ -227,26 +239,29 @@ class SpotifyTrack:
         seconds = (duration % 60000) // 1000
         return f"{minutes}:{seconds:02d}"
 
+
 def loadPreview(track):
     p = vlc.MediaPlayer(track.preview_url)
     p.play()
     return p
 
+
 def stopPreview(p):
     p.stop()
 
 
-def load_album_cover(searchFrame, track, size=(150,150)):
+def load_album_cover(searchFrame, track, size=(150, 150)):
     target = searchFrame.album_img
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
-    print(f'Image fetched for {track.track_title}')
+    print(f"Image fetched for {track.track_title}")
+
 
 def setButtonCover(btn, track, size=(70, 70)):
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
-    #print(f'Image fetched for {anime["title"]}')
+    # print(f'Image fetched for {anime["title"]}')

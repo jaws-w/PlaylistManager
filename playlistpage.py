@@ -56,11 +56,14 @@ class PlaylistPage(ctk.CTkFrame):
 
             buttonHolderFrame = ctk.CTkFrame(master=self.innerFrame)
             songBtn = ctk.CTkButton(
-                master=buttonHolderFrame, text=track, fg_color="gray", width=60
+                master=buttonHolderFrame,
+                text=f"{track[0]} by {track[1]}",
+                fg_color="gray",
+                width=60,
             )
             songBtn.track = track
             songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
-            songBtn.pack(side=tk.LEFT)
+            songBtn.pack(side=tk.LEFT, fill=tk.X, expand=1)
             buttonHolderFrame.songBtn = songBtn
             removeBtn = ctk.CTkButton(
                 master=buttonHolderFrame,
@@ -69,7 +72,7 @@ class PlaylistPage(ctk.CTkFrame):
                 command=lambda t=track: self.root.playlist.update_playlist(t),
             )
             removeBtn.pack(side=tk.RIGHT)
-            buttonHolderFrame.pack()
+            buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
             return buttonHolderFrame
 
@@ -135,13 +138,13 @@ class PlaylistPage(ctk.CTkFrame):
                     master=self.innerFrame, text="add", width=60
                 )
                 addtoPlaylist.configure(command=lambda tr=track: self.add_song(tr))
-                addtoPlaylist.grid(row=i, column=1)
+                addtoPlaylist.grid(row=i, column=4, sticky=tk.NSEW)
 
                 titleLabel = ctk.CTkLabel(
                     master=self.innerFrame,
                     text=track.track_title,
                     anchor=tk.W,
-                    wraplength=100,
+                    # wraplength=100,
                     justify="center",
                     pady=10,
                 )
@@ -152,6 +155,9 @@ class PlaylistPage(ctk.CTkFrame):
                 artistsText = track.artists[0]
                 for artist in track.artists[1:]:
                     artistsText += ", " + artist
+                    if len(artistsText) >= 40:
+                        artistsText += ', ...'
+                        break
                 artistLabel = ctk.CTkLabel(
                     master=self.innerFrame,
                     text=artistsText,
@@ -162,13 +168,15 @@ class PlaylistPage(ctk.CTkFrame):
                 )
                 # if len(artistsText) > 30:
                 #    artistLabel.configure(text=artistsText[0:30])
-                titleLabel.grid(row=i, column=2, sticky=tk.NSEW)
-                artistLabel.grid(row=i, column=3, sticky=tk.NSEW)
+                titleLabel.grid(row=i, column=1, sticky=tk.NSEW)
+                artistLabel.grid(row=i, column=2, sticky=tk.NSEW)
                 durationLabel = ctk.CTkLabel(
                     master=self.innerFrame,
                     text=track.duration,
                 )
-                durationLabel.grid(row=i, column=4, sticky=tk.NSEW)
+                durationLabel.grid(row=i, column=3, sticky=tk.NSEW)
+
+                self.innerFrame.columnconfigure(1, weight=1)
 
         def clearSearch(self):
             for child in self.winfo_children():

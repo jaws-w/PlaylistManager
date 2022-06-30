@@ -161,7 +161,7 @@ class AnimeResult(ctk.CTkFrame):
 
     # onClick function for song buttons
     def select_song(self, tr):
-        self.root.playlist.update_playlist(tr)
+        self.root.playlist.update_playlist(tr, False)
         self.update_buttons()
 
     def show_songs(self):
