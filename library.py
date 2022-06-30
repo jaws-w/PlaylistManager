@@ -3,6 +3,11 @@ from jikanpy import Jikan
 from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
+#from playsound import playsound
+#import pyaudio
+#import wave
+import time
+import vlc
 
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -222,8 +227,26 @@ class SpotifyTrack:
         seconds = (duration % 60000) // 1000
         return f"{minutes}:{seconds:02d}"
 
-    async def load_preview(self):
-        pass
+def loadPreview(track):
+    p = vlc.MediaPlayer(track.preview_url)
+    p.play()
+    return p
 
-    async def load_album_cover(self):
-        pass
+def stopPreview(p):
+    p.stop()
+
+
+def load_album_cover(searchFrame, track, size=(150,150)):
+    target = searchFrame.album_img
+    imgRes = requests.get(track.album_cover["url"])
+    img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
+    target.configure(image=img)
+    target.image = img
+    print(f'Image fetched for {track.track_title}')
+
+def setButtonCover(btn, track, size=(70, 70)):
+    imgRes = requests.get(track.album_cover["url"])
+    img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
+    btn.configure(image=img, compound=tk.TOP, borderwidth=0)
+    btn.image = img
+    #print(f'Image fetched for {anime["title"]}')

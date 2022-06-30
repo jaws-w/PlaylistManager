@@ -90,11 +90,15 @@ class PlaylistPage(ctk.CTkFrame):
             self.root = root
 
             self.label = ctk.CTkLabel(master=self, text="Add tracks to search!")
-            self.label.pack(side=tk.TOP, fill=tk.X, expand=1)
+            self.label.pack(side=tk.TOP, pady=20)
+
+            self.album_img = ctk.CTkLabel(master=self, text="")
+            self.album_img.pack(side=tk.TOP, pady=20)
 
             self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
                 master=self
             )
+            self.activePlay = None
 
         def search_spotify(self, track):
             for child in self.innerFrame.winfo_children():
@@ -105,15 +109,19 @@ class PlaylistPage(ctk.CTkFrame):
                 text="Searching for {} by {} on Spotify".format(track[0], track[1])
             )
 
+            self.playBtns = []
+
             response = library.search_spotify(track[0], track[1])
             self.previous, self.next, self.tracks = response
 
             for i, track in enumerate(self.tracks):
                 print(track.track_title, track.preview_url)
 
-                playBtn = ctk.CTkButton(master=self.innerFrame, text="play", width=60)
-                playBtn.configure(command=lambda tr=track: library.playPreview(tr))
+                playBtn = ctk.CTkButton(master=self.innerFrame, text="", width=60, bg="gray40")
+                playBtn.configure(command=lambda btn = playBtn, tr=track: self.playOnClick(btn, tr))
+                library.setButtonCover(playBtn, track)
                 playBtn.grid(row=i, column=0)
+                self.playBtns.append(playBtn)
 
                 addtoPlaylist = ctk.CTkButton(
                     master=self.innerFrame, text="add", width=60
@@ -162,3 +170,18 @@ class PlaylistPage(ctk.CTkFrame):
             print(track)
             self.root.final_playlist.append(track)
             self.root.frames["SpotifyPage"].playlistReviewFm.update()
+
+        def playOnClick(self, btn, tr):
+            library.load_album_cover(self, tr)
+            isbtn = False
+            for playing in self.playBtns:
+                if playing == self.activePlay:
+                    #laying.configure(text="play")
+                    library.stopPreview(self.p)
+                    self.activePlay = None
+                    isbtn = True
+                    break;
+            if not isbtn:
+                #btn.configure(text="pause")
+                self.p = library.loadPreview(tr)
+                self.activePlay = btn
