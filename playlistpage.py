@@ -117,8 +117,16 @@ class PlaylistPage(ctk.CTkFrame):
             for i, track in enumerate(self.tracks):
                 print(track.track_title, track.preview_url)
 
-                playBtn = ctk.CTkButton(master=self.innerFrame, text="", width=60, bg="gray40")
-                playBtn.configure(command=lambda btn = playBtn, tr=track: self.playOnClick(btn, tr))
+                playBtn = tk.Button(
+                    master=self.innerFrame,
+                    text="",
+                    width=60,
+                    highlightthickness=0,
+                    bd=0,
+                )
+                playBtn.configure(
+                    command=lambda btn=playBtn, tr=track: self.playOnClick(btn, tr)
+                )
                 library.setButtonCover(playBtn, track)
                 playBtn.grid(row=i, column=0)
                 self.playBtns.append(playBtn)
@@ -176,12 +184,12 @@ class PlaylistPage(ctk.CTkFrame):
             isbtn = False
             for playing in self.playBtns:
                 if playing == self.activePlay:
-                    #laying.configure(text="play")
+                    # laying.configure(text="play")
                     library.stopPreview(self.p)
                     self.activePlay = None
                     isbtn = True
-                    break;
+                    break
             if not isbtn:
-                #btn.configure(text="pause")
+                # btn.configure(text="pause")
                 self.p = library.loadPreview(tr)
                 self.activePlay = btn
