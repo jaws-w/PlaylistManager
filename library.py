@@ -10,13 +10,15 @@ from spotipy.oauth2 import SpotifyPKCE
 import time
 import vlc
 
+import threading
+
 from PIL import Image, ImageTk
 from io import BytesIO
 import re
 
 import customtkinter as ctk
 import tkinter as tk
-
+import asyncio
 import os
 
 # jikan = Jikan()
@@ -101,10 +103,10 @@ def parse_track(track):
     title = info[1]
     artist = info[3].split("(")[0][1:-1]
     print(f"{title} by {artist}")
-    if title == '' or artist == '':
-        print(f'parsing {track} failed')
+    if title == "" or artist == "":
+        print(f"parsing {track} failed")
         raise ValueError
-        
+
     return (title, artist)
 
 
@@ -160,7 +162,7 @@ def search_spotify(song, artist):
             song = re.sub("（.*?）", "", song, re.UNICODE)
     query = f"{song} {artist}"
     print(query)
-    res = sp.search(query, type="track", market=MARKET_CODE, limit=50)
+    res = sp.search(query, type="track", market=MARKET_CODE, limit=25)
 
     # if res["tracks"]["total"] == 0:
     #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
@@ -240,28 +242,55 @@ class SpotifyTrack:
         return f"{minutes}:{seconds:02d}"
 
 
-def loadPreview(track):
-    p = vlc.MediaPlayer(track.preview_url)
-    p.play()
-    return p
+# def loadPreview(track):
+#     p = vlc.MediaPlayer(track.preview_url)
+#     p.play()
+#     return p
 
 
-def stopPreview(p):
-    p.stop()
+# def stopPreview(p):
+#     p.stop()
 
 
-def load_album_cover(searchFrame, track, size=(150, 150)):
+class MediaPlayer:
+    def __init__(self) -> None:
+        self.player = vlc.MediaPlayer()
+
+        self.currentlyPlaying = ""
+
+    def play(self, url):
+        # print(self.player.is_playing())
+        if url == self.currentlyPlaying and self.player.is_playing():
+            self.currentlyPlaying = ""
+            self.player.stop()
+            return
+
+        self.currentlyPlaying = url
+        media = vlc.Media(url)
+        self.player.stop()
+        self.player.set_media(media)
+        self.player.play()
+
+    def stop(self):
+        self.currentlyPlaying = ""
+        self.player.stop()
+
+
+async def load_album_cover(searchFrame, track, size=(150, 150)):
     target = searchFrame.album_img
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
+    # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")
+    searchFrame.update()
 
 
-def setButtonCover(btn, track, size=(70, 70)):
+async def setButtonCover(btn, track, size=(70, 70)):
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
+    btn.update()
     # print(f'Image fetched for {anime["title"]}')

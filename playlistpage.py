@@ -1,6 +1,7 @@
-from doctest import master
+import asyncio
 import customtkinter as ctk
 import tkinter as tk
+from PIL import Image, ImageTk
 from customtkinter import ThemeManager
 
 import library
@@ -9,6 +10,8 @@ import library
 class PlaylistPage(ctk.CTkFrame):
     def __init__(self, root, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.player = library.MediaPlayer()
 
         self.playlistFm = PlaylistPage.PlaylistFrame(master=self, root=root)
         self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
@@ -69,7 +72,10 @@ class PlaylistPage(ctk.CTkFrame):
                 master=buttonHolderFrame,
                 text="X",
                 width=20,
-                command=lambda t=track: self.root.playlist.update_playlist(t),
+                # command=lambda t=track: self.root.playlist.update_playlist(t),
+            )
+            removeBtn.configure(
+                command=lambda i=removeBtn, t=track: self.removeBtnOnClick(i, t)
             )
             removeBtn.pack(side=tk.RIGHT)
             buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
@@ -77,6 +83,7 @@ class PlaylistPage(ctk.CTkFrame):
             return buttonHolderFrame
 
         def songBtnOnClick(self, btn):
+            self.master.player.stop()
             print(btn.track)
             for frame in self.root.playlist.playlist.values():
                 button = frame.songBtn
@@ -84,13 +91,23 @@ class PlaylistPage(ctk.CTkFrame):
                     button.configure(fg_color=ThemeManager.theme["color"]["button"])
                 else:
                     button.configure(fg_color="gray")
-            self.activeBtn = btn
-            self.master.spotifyFm.search_spotify(btn.track)
+            self.activeBtnFm = btn.master
+            asyncio.run(self.master.spotifyFm.search_spotify(btn.track))
+
+        def removeBtnOnClick(self, btn, t):
+            if self.activeBtnFm is btn.master:
+                self.master.spotifyFm.clear_search()
+                self.master.player.stop()
+
+            self.root.playlist.update_playlist(t)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
+
+            img = Image.open("assets/dark_mode_loading70x70.png")
+            self.loading_img = ImageTk.PhotoImage(img)
 
             self.label = ctk.CTkLabel(master=self, text="Add tracks to search!")
             self.label.pack(side=tk.TOP, pady=20)
@@ -103,34 +120,43 @@ class PlaylistPage(ctk.CTkFrame):
             )
             self.activePlay = None
 
-        def search_spotify(self, track):
+        def clear_search(self):
             for child in self.innerFrame.winfo_children():
 
                 child.destroy()
+            self.label.configure(text="Add tracks to search!")
+            # self.album_img.pack_forget()
+            self.album_img.configure(image="")
 
+        async def search_spotify(self, track):
+            # for child in self.innerFrame.winfo_children():
+
+            #     child.destroy()
+
+            self.clear_search()
             self.label.configure(
                 text="Searching for {} by {} on Spotify".format(track[0], track[1])
             )
 
             self.playBtns = []
 
-            response = library.search_spotify(track[0], track[1])
-            self.previous, self.next, self.tracks = response
+            self.previous, self.next, self.tracks = library.search_spotify(
+                track[0], track[1]
+            )
 
             for i, track in enumerate(self.tracks):
                 print(track.track_title, track.preview_url)
 
                 playBtn = tk.Button(
                     master=self.innerFrame,
-                    text="",
-                    width=60,
+                    image=self.loading_img,
                     highlightthickness=0,
                     bd=0,
                 )
                 playBtn.configure(
                     command=lambda btn=playBtn, tr=track: self.playOnClick(btn, tr)
                 )
-                library.setButtonCover(playBtn, track)
+                asyncio.create_task(library.setButtonCover(playBtn, track))
                 playBtn.grid(row=i, column=0)
                 self.playBtns.append(playBtn)
 
@@ -156,8 +182,9 @@ class PlaylistPage(ctk.CTkFrame):
                 for artist in track.artists[1:]:
                     artistsText += ", " + artist
                     if len(artistsText) >= 40:
-                        artistsText += ', ...'
+                        artistsText += ", ..."
                         break
+
                 artistLabel = ctk.CTkLabel(
                     master=self.innerFrame,
                     text=artistsText,
@@ -177,6 +204,7 @@ class PlaylistPage(ctk.CTkFrame):
                 durationLabel.grid(row=i, column=3, sticky=tk.NSEW)
 
                 self.innerFrame.columnconfigure(1, weight=1)
+                self.update()
 
         def clearSearch(self):
             for child in self.winfo_children():
@@ -188,16 +216,24 @@ class PlaylistPage(ctk.CTkFrame):
             self.root.frames["SpotifyPage"].playlistReviewFm.update()
 
         def playOnClick(self, btn, tr):
-            library.load_album_cover(self, tr)
-            isbtn = False
-            for playing in self.playBtns:
-                if playing == self.activePlay:
-                    # laying.configure(text="play")
-                    library.stopPreview(self.p)
-                    self.activePlay = None
-                    isbtn = True
-                    break
-            if not isbtn:
-                # btn.configure(text="pause")
-                self.p = library.loadPreview(tr)
-                self.activePlay = btn
+            asyncio.run(library.load_album_cover(self, tr))
+            # isbtn = False
+            self.master.player.play(tr.preview_url)
+
+            # if
+
+            # for playing in self.playBtns:
+            #     if playing == self.activePlay:
+            #         # laying.configure(text="play")
+            #         # library.stopPreview(self.p)
+            #         self.player = vlc.MediaPlayer(tr.preview_url)
+            #         self.player.play()
+            #         print(self.player.get_media())
+            #         self.activePlay = None
+            #         isbtn = True
+            #         break
+            # if not isbtn:
+            #     # btn.configure(text="pause")
+            #     # self.p = library.loadPreview(tr)
+
+            #     self.activePlay = btn
