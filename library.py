@@ -4,13 +4,21 @@ from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
 
+# from playsound import playsound
+# import pyaudio
+# import wave
+import time
+import vlc
+
+import threading
+
 from PIL import Image, ImageTk
 from io import BytesIO
 import re
 
 import customtkinter as ctk
 import tkinter as tk
-
+import asyncio
 import os
 
 # jikan = Jikan()
@@ -93,7 +101,12 @@ def search_anime(anime_title: str, page: int):
 def parse_track(track):
     info = re.split('"+|by', track)
     title = info[1]
-    artist = info[3].split("\xa0")[0][1:]
+    artist = info[3].split("(")[0][1:-1]
+    print(f"{title} by {artist}")
+    if title == "" or artist == "":
+        print(f"parsing {track} failed")
+        raise ValueError
+
     return (title, artist)
 
 
@@ -120,9 +133,15 @@ def get_songs(anime):
     ops = []
     eds = []
     for tr in resp_js["data"]["openings"]:
-        ops.append(parse_track(tr))
+        try:
+            ops.append(parse_track(tr))
+        except ValueError:
+            pass
     for tr in resp_js["data"]["endings"]:
-        eds.append(parse_track(tr))
+        try:
+            eds.append(parse_track(tr))
+        except ValueError:
+            pass
     return {"openings": ops, "endings": eds}
 
 
@@ -143,7 +162,7 @@ def search_spotify(song, artist):
             song = re.sub("（.*?）", "", song, re.UNICODE)
     query = f"{song} {artist}"
     print(query)
-    res = sp.search(query, type="track", market=MARKET_CODE, limit=50)
+    res = sp.search(query, type="track", market=MARKET_CODE, limit=25)
 
     # if res["tracks"]["total"] == 0:
     #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
@@ -186,13 +205,25 @@ def addPlaylist(spotify_playlist, final_playlist):
 
 class Playlist:
     def __init__(self) -> None:
-        self.playlist = set()
+        self.playlist = dict()
+        self.playlistPage = None
+        self.animePage = None
 
-    def update_playlist(self, tr):
-        if tr in self.playlist:
-            self.playlist.remove(tr)
+    def update_playlist(self, tr, update_buttons=True):
+        # if tr in self.playlist:
+        #     self.playlist.remove(tr)
+        # else:
+        #     self.playlist.add(tr)
+        if tr in self.playlist.keys():
+            self.playlist[tr].destroy()
+            self.playlist.pop(tr)
         else:
-            self.playlist.add(tr)
+            track_frame = self.playlistPage.playlistFm.add_song_button(tr)
+            self.playlist[tr] = track_frame
+
+        self.playlistPage.update()
+        if update_buttons:
+            self.animePage.update_buttons()
 
 
 class SpotifyTrack:
@@ -210,8 +241,56 @@ class SpotifyTrack:
         seconds = (duration % 60000) // 1000
         return f"{minutes}:{seconds:02d}"
 
-    async def load_preview(self):
-        pass
 
-    async def load_album_cover(self):
-        pass
+# def loadPreview(track):
+#     p = vlc.MediaPlayer(track.preview_url)
+#     p.play()
+#     return p
+
+
+# def stopPreview(p):
+#     p.stop()
+
+
+class MediaPlayer:
+    def __init__(self) -> None:
+        self.player = vlc.MediaPlayer()
+
+        self.currentlyPlaying = ""
+
+    def play(self, url):
+        # print(self.player.is_playing())
+        if url == self.currentlyPlaying and self.player.is_playing():
+            self.currentlyPlaying = ""
+            self.player.stop()
+            return
+
+        self.currentlyPlaying = url
+        media = vlc.Media(url)
+        self.player.stop()
+        self.player.set_media(media)
+        self.player.play()
+
+    def stop(self):
+        self.currentlyPlaying = ""
+        self.player.stop()
+
+
+async def load_album_cover(searchFrame, track, size=(150, 150)):
+    target = searchFrame.album_img
+    imgRes = requests.get(track.album_cover["url"])
+    img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
+    target.configure(image=img)
+    target.image = img
+    # target.pack(side=tk.TOP, pady=20)
+    print(f"Image fetched for {track.track_title}")
+    searchFrame.update()
+
+
+async def setButtonCover(btn, track, size=(70, 70)):
+    imgRes = requests.get(track.album_cover["url"])
+    img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
+    btn.configure(image=img, compound=tk.TOP, borderwidth=0)
+    btn.image = img
+    btn.update()
+    # print(f'Image fetched for {anime["title"]}')

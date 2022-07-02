@@ -47,6 +47,13 @@ class AnimeSearchPage(ctk.CTkFrame):
             self.animesList.pack(fill=tk.BOTH, expand=True)
             asyncio.run(self.animesList.search(anime_title, 1))
 
+    def update_buttons(self):
+        print("update buttons")
+        for anime in self.animesList.innerFrame.winfo_children():
+            if isinstance(anime, AnimeResult):
+                if anime.songsShown:
+                    anime.update_buttons()
+
 
 class AnimeList(ctk.CTkFrame):
     def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
@@ -154,7 +161,7 @@ class AnimeResult(ctk.CTkFrame):
 
     # onClick function for song buttons
     def select_song(self, tr):
-        self.root.playlist.update_playlist(tr)
+        self.root.playlist.update_playlist(tr, False)
         self.update_buttons()
 
     def show_songs(self):
