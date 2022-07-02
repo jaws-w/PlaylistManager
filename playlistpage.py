@@ -67,6 +67,7 @@ class PlaylistPage(ctk.CTkFrame):
             songBtn.track = track
             songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
             songBtn.pack(side=tk.LEFT, fill=tk.X, expand=1)
+            songBtn.results = None
             buttonHolderFrame.songBtn = songBtn
             removeBtn = ctk.CTkButton(
                 master=buttonHolderFrame,
@@ -83,7 +84,6 @@ class PlaylistPage(ctk.CTkFrame):
             return buttonHolderFrame
 
         def songBtnOnClick(self, btn):
-            self.master.player.stop()
             print(btn.track)
             for frame in self.root.playlist.playlist.values():
                 button = frame.songBtn
@@ -97,7 +97,6 @@ class PlaylistPage(ctk.CTkFrame):
         def removeBtnOnClick(self, btn, t):
             if self.activeBtnFm is btn.master:
                 self.master.spotifyFm.clear_search()
-                self.master.player.stop()
 
             self.root.playlist.update_playlist(t)
 
@@ -105,6 +104,8 @@ class PlaylistPage(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
+
+            self.query = None
 
             img = Image.open("assets/dark_mode_loading70x70.png")
             self.loading_img = ImageTk.PhotoImage(img)
@@ -124,6 +125,8 @@ class PlaylistPage(ctk.CTkFrame):
             for child in self.innerFrame.winfo_children():
 
                 child.destroy()
+            self.master.player.stop()
+
             self.label.configure(text="Add tracks to search!")
             # self.album_img.pack_forget()
             self.album_img.configure(image="")
@@ -132,6 +135,10 @@ class PlaylistPage(ctk.CTkFrame):
             # for child in self.innerFrame.winfo_children():
 
             #     child.destroy()
+            if self.query == track:
+                return
+
+            self.query = track
 
             self.clear_search()
             self.label.configure(
@@ -160,14 +167,14 @@ class PlaylistPage(ctk.CTkFrame):
                 playBtn.grid(row=i, column=0)
                 self.playBtns.append(playBtn)
 
-                changeFinal = ctk.CTkButton(
-                    master=self.innerFrame, width=60
-                )
-                #if track in self.root.final_playlist:
+                changeFinal = ctk.CTkButton(master=self.innerFrame, width=60)
+                # if track in self.root.final_playlist:
                 #    changeFinal.configure(text='-')
-                #else:
-                changeFinal.configure(text='+')
-                changeFinal.configure(command=lambda btn = changeFinal, tr=track: self.updatefinal(btn, tr))
+                # else:
+                changeFinal.configure(text="+")
+                changeFinal.configure(
+                    command=lambda btn=changeFinal, tr=track: self.updatefinal(btn, tr)
+                )
                 changeFinal.grid(row=i, column=4, sticky=tk.NSEW)
 
                 titleLabel = ctk.CTkLabel(
@@ -215,13 +222,13 @@ class PlaylistPage(ctk.CTkFrame):
                 child.destroy()
 
         def updatefinal(self, btn, track):
-            #print(track)
+            # print(track)
             if track in self.root.final_playlist:
                 self.root.final_playlist.remove(track)
-                btn.configure(text='+')
+                btn.configure(text="+")
             else:
                 self.root.final_playlist.append(track)
-                btn.configure(text='-')
+                btn.configure(text="-")
             self.root.frames["SpotifyPage"].playlistReviewFm.update()
 
         def playOnClick(self, btn, tr):
