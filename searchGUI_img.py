@@ -46,8 +46,7 @@ class tkinterApp(ctk.CTk):
 
     def show_frame(self, page: str) -> None:
         frame = self.frames[page]
-        # if page == "PlaylistPage":
-        #     frame.playlistFm.load_current_playlist()
+        self.frames["PlaylistPage"].player.stop()
         frame.tkraise()
 
 
