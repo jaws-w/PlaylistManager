@@ -160,11 +160,15 @@ class PlaylistPage(ctk.CTkFrame):
                 playBtn.grid(row=i, column=0)
                 self.playBtns.append(playBtn)
 
-                addtoPlaylist = ctk.CTkButton(
-                    master=self.innerFrame, text="add", width=60
+                changeFinal = ctk.CTkButton(
+                    master=self.innerFrame, width=60
                 )
-                addtoPlaylist.configure(command=lambda tr=track: self.add_song(tr))
-                addtoPlaylist.grid(row=i, column=4, sticky=tk.NSEW)
+                #if track in self.root.final_playlist:
+                #    changeFinal.configure(text='-')
+                #else:
+                changeFinal.configure(text='+')
+                changeFinal.configure(command=lambda btn = changeFinal, tr=track: self.updatefinal(btn, tr))
+                changeFinal.grid(row=i, column=4, sticky=tk.NSEW)
 
                 titleLabel = ctk.CTkLabel(
                     master=self.innerFrame,
@@ -210,9 +214,14 @@ class PlaylistPage(ctk.CTkFrame):
             for child in self.winfo_children():
                 child.destroy()
 
-        def add_song(self, track):
-            print(track)
-            self.root.final_playlist.append(track)
+        def updatefinal(self, btn, track):
+            #print(track)
+            if track in self.root.final_playlist:
+                self.root.final_playlist.remove(track)
+                btn.configure(text='+')
+            else:
+                self.root.final_playlist.append(track)
+                btn.configure(text='-')
             self.root.frames["SpotifyPage"].playlistReviewFm.update()
 
         def playOnClick(self, btn, tr):
