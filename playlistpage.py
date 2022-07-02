@@ -177,6 +177,8 @@ class PlaylistPage(ctk.CTkFrame):
                 )
                 changeFinal.grid(row=i, column=4, sticky=tk.NSEW)
 
+                playBtn.changeFinal = changeFinal
+
                 titleLabel = ctk.CTkLabel(
                     master=self.innerFrame,
                     text=track.track_title,
@@ -224,12 +226,17 @@ class PlaylistPage(ctk.CTkFrame):
         def updatefinal(self, btn, track):
             # print(track)
             if track in self.root.final_playlist:
-                self.root.final_playlist.remove(track)
+                # self.root.final_playlist.remove(track)
                 btn.configure(text="+")
+                self.root.frames["SpotifyPage"].playlistReviewFm.removeFromFinal(
+                    btn.finalFrame, track
+                )
             else:
                 self.root.final_playlist.append(track)
                 btn.configure(text="-")
-            self.root.frames["SpotifyPage"].playlistReviewFm.update()
+                btn.finalFrame = self.root.frames[
+                    "SpotifyPage"
+                ].playlistReviewFm.addToFinal(btn, track)
 
         def playOnClick(self, btn, tr):
             asyncio.run(library.load_album_cover(self, tr))

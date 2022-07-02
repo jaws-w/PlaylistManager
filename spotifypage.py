@@ -59,7 +59,7 @@ class SpotifyPage(ctk.CTkFrame):
                 for artist in track.artists[1:]:
                     artistsText += ", " + artist
                     if len(artistsText) >= 40:
-                        artistsText += ', ...'
+                        artistsText += ", ..."
                         break
                 artistLabel = ctk.CTkLabel(
                     master=finalFrame,
@@ -83,7 +83,7 @@ class SpotifyPage(ctk.CTkFrame):
                     master=finalFrame,
                     text="X",
                     width=20,
-                    command=lambda tr = track, f=finalFrame: self.removeFromFinal(f,tr),
+                    command=lambda tr=track, f=finalFrame: self.removeFromFinal(f, tr),
                 )
                 removeBtn.pack(side=tk.RIGHT)
                 finalFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -91,15 +91,62 @@ class SpotifyPage(ctk.CTkFrame):
 
                 self.innerFrame.columnconfigure(1, weight=1)
 
-        def removeFromFinal(self, del_frame, track):
-            for frame in self.final_songFrames:
-                if frame == del_frame:
-                    del_frame.destroy()
+        def addToFinal(self, addBtn, track):
+            finalFrame = ctk.CTkFrame(master=self.innerFrame)
+            finalFrame.addBtn = addBtn
+            titleLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=track.track_title,
+                anchor=tk.W,
+                # wraplength=100,
+                justify="center",
+                pady=10,
+            )
+            artistsText = track.artists[0]
+            for artist in track.artists[1:]:
+                artistsText += ", " + artist
+                if len(artistsText) >= 40:
+                    artistsText += ", ..."
                     break
-            self.root.final_playlist.remove(track)
-            
+            artistLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=artistsText,
+                anchor=tk.W,
+                wraplength=100,
+                justify="center",
+                pady=10,
+            )
+            # if len(artistsText) > 30:
+            #    artistLabel.configure(text=artistsText[0:30])
+            titleLabel.pack(side=tk.LEFT)
+            artistLabel.pack(side=tk.LEFT)
+            durationLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=track.duration,
+            )
+            durationLabel.pack(side=tk.LEFT)
 
-            
+            removeBtn = ctk.CTkButton(
+                master=finalFrame,
+                text="X",
+                width=20,
+                command=lambda tr=track, f=finalFrame: self.removeFromFinal(f, tr),
+            )
+            removeBtn.pack(side=tk.RIGHT)
+            finalFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            self.final_songFrames.append(finalFrame)
+
+            self.innerFrame.columnconfigure(1, weight=1)
+            return finalFrame
+
+        def removeFromFinal(self, del_frame, track):
+            del_frame.addBtn.configure(text="+")
+            del_frame.destroy()
+            # for frame in self.final_songFrames:
+            #     if frame == del_frame:
+            #         del_frame.destroy()
+            #         break
+            self.root.final_playlist.remove(track)
 
     class AddPlaylist(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):

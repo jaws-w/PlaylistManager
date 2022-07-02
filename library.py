@@ -101,7 +101,7 @@ def search_anime(anime_title: str, page: int):
 def parse_track(track):
     info = re.split('"+|by', track)
     title = info[1]
-    artist = info[3].split("(")[0][1:-1]
+    artist = info[3].split("(")[0].strip()
     print(f"{title} by {artist}")
     if title == "" or artist == "":
         print(f"parsing {track} failed")
