@@ -45,7 +45,7 @@ class AnimeSearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1))
+            self.animesList.search(anime_title, 1)
 
     def update_buttons(self):
         print("update buttons")
@@ -69,7 +69,7 @@ class AnimeList(ctk.CTkFrame):
         self.cachedFrames = dict()
         self.loadedPages = 0
 
-    async def search(self, query, page_num):
+    def search(self, query, page_num):
         print("page=", page_num)
 
         if self.query != query or self.page_num != page_num:
@@ -115,8 +115,9 @@ class AnimeList(ctk.CTkFrame):
                         master=self.innerFrame, anime=res, root=self.root
                     )
 
-                    asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
-
+                    self.root.loop.create_task(
+                        library.set_image(res, animeFrame.imgLabel)
+                    )
                     self.cachedFrames[res["mal_id"]] = animeFrame
                 else:
                     animeFrame = self.cachedFrames[res["mal_id"]]
@@ -127,7 +128,7 @@ class AnimeList(ctk.CTkFrame):
 
     def diffPage(self, query, pagenum):
 
-        asyncio.run(self.search(query, pagenum))
+        self.search(query, pagenum)
 
 
 # Class for displaying anime
