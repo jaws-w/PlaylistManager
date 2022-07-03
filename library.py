@@ -147,6 +147,8 @@ def get_songs(anime):
 
 
 async def set_image(anime, target, size=(50, 70)):
+    await asyncio.sleep(0)
+
     imgRes = requests.get(anime["images"]["jpg"]["image_url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
@@ -278,27 +280,35 @@ class MediaPlayer:
 
 async def load_album_cover(searchFrame, track, size):
     target = searchFrame.album_img
+    await asyncio.sleep(0)
+
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
     # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")
-    searchFrame.update()
+    target.update()
 
 
 async def setButtonCover(btn, track, size=(70, 70)):
+    await asyncio.sleep(0)
+
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
-    btn.update()
     # print(f'Image fetched for {anime["title"]}')
+    btn.update()
+
+
 
 def load_song_album(cover, track, size):
+    # await asyncio.sleep(0)
+
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     cover.configure(image=img)
     cover.image = img
     # target.pack(side=tk.TOP, pady=20)
-    print(f"Image fetched for {track.track_title}") 
+    print(f"Image fetched for {track.track_title}")
