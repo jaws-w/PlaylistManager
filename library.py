@@ -276,7 +276,7 @@ class MediaPlayer:
         self.player.stop()
 
 
-async def load_album_cover(searchFrame, track, size=(150, 150)):
+async def load_album_cover(searchFrame, track, size):
     target = searchFrame.album_img
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
@@ -294,3 +294,11 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.image = img
     btn.update()
     # print(f'Image fetched for {anime["title"]}')
+
+def load_song_album(cover, track, size):
+    imgRes = requests.get(track.album_cover["url"])
+    img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
+    cover.configure(image=img)
+    cover.image = img
+    # target.pack(side=tk.TOP, pady=20)
+    print(f"Image fetched for {track.track_title}") 
