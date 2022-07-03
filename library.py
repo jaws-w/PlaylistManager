@@ -206,6 +206,7 @@ def addPlaylist(spotify_playlist, final_playlist):
 class Playlist:
     def __init__(self) -> None:
         self.playlist = dict()
+        self.results = dict()
         self.playlistPage = None
         self.animePage = None
 
@@ -217,6 +218,7 @@ class Playlist:
         if tr in self.playlist.keys():
             self.playlist[tr].destroy()
             self.playlist.pop(tr)
+            self.results.pop(tr)
         else:
             track_frame = self.playlistPage.playlistFm.add_song_button(tr)
             self.playlist[tr] = track_frame
