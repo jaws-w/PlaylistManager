@@ -1,3 +1,4 @@
+import asyncio
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -89,7 +90,7 @@ class PlaylistPage(ctk.CTkFrame):
                 else:
                     button.configure(fg_color="gray")
             self.activeBtnFm = btn.master
-            self.master.spotifyFm.search_spotify(btn.track)
+            asyncio.run(self.master.spotifyFm.search_spotify(btn.track))
 
         def removeBtnOnClick(self, btn, t):
             if self.activeBtnFm is btn.master:
@@ -128,7 +129,7 @@ class PlaylistPage(ctk.CTkFrame):
             self.label.configure(text="Add tracks to search!")
             self.album_img.configure(image="")
 
-        def search_spotify(self, track):
+        async def search_spotify(self, track):
 
             if self.query == track:
                 return
@@ -159,10 +160,7 @@ class PlaylistPage(ctk.CTkFrame):
                         bd=0,
                     )
                     playBtn.configure(command=lambda tr=sp_track: self.playOnClick(tr))
-                    self.root.loop.create_task(
-                        library.setButtonCover(playBtn, sp_track)
-                    )
-                    # self.root.tasks.append(task)
+                    asyncio.create_task(library.setButtonCover(playBtn, sp_track))
                     playBtn.grid(row=i, column=0)
 
                     changeFinal = ctk.CTkButton(master=dummyFrame, width=60)
@@ -235,7 +233,5 @@ class PlaylistPage(ctk.CTkFrame):
                 ].playlistReviewFm.addToFinal(btn, track)
 
         def playOnClick(self, tr):
-            self.root.loop.create_task(
-                library.load_album_cover(self, tr, size=(150, 150))
-            )
+            asyncio.run(library.load_album_cover(self, tr))
             self.master.player.play(tr.preview_url)

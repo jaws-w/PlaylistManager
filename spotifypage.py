@@ -1,5 +1,8 @@
+from doctest import master
+from typing import final
 import customtkinter as ctk
 import tkinter as tk
+import asyncio
 
 import library
 
@@ -49,14 +52,12 @@ class SpotifyPage(ctk.CTkFrame):
             finalFrame = ctk.CTkFrame(master=self.innerFrame)
             finalFrame.addBtn = addBtn
 
-            album = ctk.CTkLabel(
-                master=finalFrame,
+            album = ctk.CTkLabel(master=finalFrame,
                 anchor=tk.W,
                 # wraplength=100,
                 justify="center",
-                pady=10,
-            )
-            library.load_song_album(album, track, size=(70, 70))
+                pady=10,)
+            library.load_song_album(album, track, size=(70,70))
             album.pack(side=tk.LEFT)
 
             titleLabel = ctk.CTkLabel(

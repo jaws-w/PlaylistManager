@@ -65,12 +65,19 @@ def create_scroll_canvas(master):
     innerFrame.bind("<Configure>", lambda event: canvasConfigure(scroll_canvas, event))
     scroll_canvas.bind("<Configure>", lambda event: frameWidth(scroll_canvas, w, event))
 
+    scroll_canvas.bind("<Enter>", lambda event: enter(scroll_canvas, event))
+
     scroll_canvas.bind_all(
         "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
     )
 
     return scroll_canvas, innerFrame
 
+def enter(scroll_canvas, event):
+    #print('entered')
+    scroll_canvas.bind_all(
+        "<MouseWheel>", lambda event2: on_vertical(scroll_canvas, event2)
+    )
 
 def frameWidth(scroll_canvas, w, event):
     scroll_canvas.itemconfig(w, width=event.width)
@@ -147,8 +154,6 @@ def get_songs(anime):
 
 
 async def set_image(anime, target, size=(50, 70)):
-    await asyncio.sleep(0)
-
     imgRes = requests.get(anime["images"]["jpg"]["image_url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
@@ -280,35 +285,27 @@ class MediaPlayer:
 
 async def load_album_cover(searchFrame, track, size):
     target = searchFrame.album_img
-    await asyncio.sleep(0)
-
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
     # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")
-    target.update()
+    searchFrame.update()
 
 
 async def setButtonCover(btn, track, size=(70, 70)):
-    await asyncio.sleep(0)
-
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
-    # print(f'Image fetched for {anime["title"]}')
     btn.update()
-
-
+    # print(f'Image fetched for {anime["title"]}')
 
 def load_song_album(cover, track, size):
-    # await asyncio.sleep(0)
-
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     cover.configure(image=img)
     cover.image = img
     # target.pack(side=tk.TOP, pady=20)
-    print(f"Image fetched for {track.track_title}")
+    print(f"Image fetched for {track.track_title}") 
