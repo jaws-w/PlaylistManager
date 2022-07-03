@@ -35,7 +35,6 @@ class PlaylistPage(ctk.CTkFrame):
             master=self,
             text="add current playlist to your Spotify library",
             pady=20,
-            # command=lambda: library.addPlaylist(final_playlist),
             command=lambda: root.show_frame("SpotifyPage"),
         )
         self.finalPlaylistBtn.grid(row=1, column=1, sticky=tk.NSEW, padx=10, pady=10)
@@ -67,12 +66,12 @@ class PlaylistPage(ctk.CTkFrame):
             songBtn.track = track
             songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
             songBtn.pack(side=tk.LEFT, fill=tk.X, expand=1)
+
             buttonHolderFrame.songBtn = songBtn
             removeBtn = ctk.CTkButton(
                 master=buttonHolderFrame,
                 text="X",
                 width=20,
-                # command=lambda t=track: self.root.playlist.update_playlist(t),
             )
             removeBtn.configure(
                 command=lambda i=removeBtn, t=track: self.removeBtnOnClick(i, t)
@@ -83,7 +82,6 @@ class PlaylistPage(ctk.CTkFrame):
             return buttonHolderFrame
 
         def songBtnOnClick(self, btn):
-            self.master.player.stop()
             print(btn.track)
             for frame in self.root.playlist.playlist.values():
                 button = frame.songBtn
@@ -97,7 +95,6 @@ class PlaylistPage(ctk.CTkFrame):
         def removeBtnOnClick(self, btn, t):
             if self.activeBtnFm is btn.master:
                 self.master.spotifyFm.clear_search()
-                self.master.player.stop()
 
             self.root.playlist.update_playlist(t)
 
@@ -105,6 +102,8 @@ class PlaylistPage(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
+
+            self.query = None
 
             img = Image.open("assets/dark_mode_loading70x70.png")
             self.loading_img = ImageTk.PhotoImage(img)
@@ -123,117 +122,116 @@ class PlaylistPage(ctk.CTkFrame):
         def clear_search(self):
             for child in self.innerFrame.winfo_children():
 
-                child.destroy()
+                child.pack_forget()
+            self.query = ""
+            self.master.player.stop()
+
             self.label.configure(text="Add tracks to search!")
-            # self.album_img.pack_forget()
             self.album_img.configure(image="")
 
         async def search_spotify(self, track):
-            # for child in self.innerFrame.winfo_children():
 
-            #     child.destroy()
+            if self.query == track:
+                return
+
+            self.query = track
 
             self.clear_search()
             self.label.configure(
                 text="Searching for {} by {} on Spotify".format(track[0], track[1])
             )
 
-            self.playBtns = []
-
-            self.previous, self.next, self.tracks = library.search_spotify(
-                track[0], track[1]
-            )
-
-            for i, track in enumerate(self.tracks):
-                print(track.track_title, track.preview_url)
-
-                playBtn = tk.Button(
-                    master=self.innerFrame,
-                    image=self.loading_img,
-                    highlightthickness=0,
-                    bd=0,
+            try:
+                dummyFrame = self.root.playlist.results[track]
+                print("loaded cached results")
+            except KeyError:
+                dummyFrame = ctk.CTkFrame(master=self.innerFrame)
+                self.previous, self.next, self.tracks = library.search_spotify(
+                    track[0], track[1]
                 )
-                playBtn.configure(
-                    command=lambda btn=playBtn, tr=track: self.playOnClick(btn, tr)
-                )
-                asyncio.create_task(library.setButtonCover(playBtn, track))
-                playBtn.grid(row=i, column=0)
-                self.playBtns.append(playBtn)
 
-                addtoPlaylist = ctk.CTkButton(
-                    master=self.innerFrame, text="add", width=60
-                )
-                addtoPlaylist.configure(command=lambda tr=track: self.add_song(tr))
-                addtoPlaylist.grid(row=i, column=4, sticky=tk.NSEW)
+                for i, sp_track in enumerate(self.tracks):
+                    print(sp_track.track_title, sp_track.preview_url)
 
-                titleLabel = ctk.CTkLabel(
-                    master=self.innerFrame,
-                    text=track.track_title,
-                    anchor=tk.W,
-                    # wraplength=100,
-                    justify="center",
-                    pady=10,
-                )
-                # if len(track.track_title) > 30:
-                #    titleLabel.configure(text=track.track_title[0:30])
-                # wraplength=100, justify="center"
+                    playBtn = tk.Button(
+                        master=dummyFrame,
+                        image=self.loading_img,
+                        highlightthickness=0,
+                        bd=0,
+                    )
+                    playBtn.configure(command=lambda tr=sp_track: self.playOnClick(tr))
+                    asyncio.create_task(library.setButtonCover(playBtn, sp_track))
+                    playBtn.grid(row=i, column=0)
 
-                artistsText = track.artists[0]
-                for artist in track.artists[1:]:
-                    artistsText += ", " + artist
-                    if len(artistsText) >= 40:
-                        artistsText += ", ..."
-                        break
+                    changeFinal = ctk.CTkButton(master=dummyFrame, width=60)
 
-                artistLabel = ctk.CTkLabel(
-                    master=self.innerFrame,
-                    text=artistsText,
-                    anchor=tk.W,
-                    wraplength=100,
-                    justify="center",
-                    pady=10,
-                )
-                # if len(artistsText) > 30:
-                #    artistLabel.configure(text=artistsText[0:30])
-                titleLabel.grid(row=i, column=1, sticky=tk.NSEW)
-                artistLabel.grid(row=i, column=2, sticky=tk.NSEW)
-                durationLabel = ctk.CTkLabel(
-                    master=self.innerFrame,
-                    text=track.duration,
-                )
-                durationLabel.grid(row=i, column=3, sticky=tk.NSEW)
+                    changeFinal.configure(text="+")
+                    changeFinal.configure(
+                        command=lambda btn=changeFinal, tr=sp_track: self.updatefinal(
+                            btn, tr
+                        )
+                    )
+                    changeFinal.grid(row=i, column=4, sticky=tk.NSEW)
 
-                self.innerFrame.columnconfigure(1, weight=1)
-                self.update()
+                    playBtn.changeFinal = changeFinal
+
+                    titleLabel = ctk.CTkLabel(
+                        master=dummyFrame,
+                        text=sp_track.track_title,
+                        anchor=tk.W,
+                        # wraplength=100,
+                        justify="center",
+                        pady=10,
+                    )
+
+                    artistsText = sp_track.artists[0]
+                    for artist in sp_track.artists[1:]:
+                        artistsText += ", " + artist
+                        if len(artistsText) >= 40:
+                            artistsText += ", ..."
+                            break
+
+                    artistLabel = ctk.CTkLabel(
+                        master=dummyFrame,
+                        text=artistsText,
+                        anchor=tk.W,
+                        wraplength=100,
+                        justify="center",
+                        pady=10,
+                    )
+
+                    titleLabel.grid(row=i, column=1, sticky=tk.NSEW)
+                    artistLabel.grid(row=i, column=2, sticky=tk.NSEW)
+                    durationLabel = ctk.CTkLabel(
+                        master=dummyFrame,
+                        text=sp_track.duration,
+                    )
+                    durationLabel.grid(row=i, column=3, sticky=tk.NSEW)
+
+                    dummyFrame.columnconfigure(1, weight=1)
+
+                self.root.playlist.results[track] = dummyFrame
+
+            dummyFrame.pack(fill=tk.BOTH, expand=1)
+            self.update()
 
         def clearSearch(self):
             for child in self.winfo_children():
                 child.destroy()
 
-        def add_song(self, track):
-            print(track)
-            self.root.final_playlist.append(track)
-            self.root.frames["SpotifyPage"].playlistReviewFm.update()
+        def updatefinal(self, btn, track):
+            if track in self.root.final_playlist:
+                btn.configure(text="+")
+                self.root.frames["SpotifyPage"].playlistReviewFm.removeFromFinal(
+                    btn.finalFrame, track
+                )
+            else:
+                self.root.final_playlist.append(track)
+                btn.configure(text="-")
+                btn.finalFrame = self.root.frames[
+                    "SpotifyPage"
+                ].playlistReviewFm.addToFinal(btn, track)
 
-        def playOnClick(self, btn, tr):
+        def playOnClick(self, tr):
             asyncio.run(library.load_album_cover(self, tr))
-            # isbtn = False
             self.master.player.play(tr.preview_url)
-
-            # if
-
-            # for playing in self.playBtns:
-            #     if playing == self.activePlay:
-            #         # laying.configure(text="play")
-            #         # library.stopPreview(self.p)
-            #         self.player = vlc.MediaPlayer(tr.preview_url)
-            #         self.player.play()
-            #         print(self.player.get_media())
-            #         self.activePlay = None
-            #         isbtn = True
-            #         break
-            # if not isbtn:
-            #     # btn.configure(text="pause")
-            #     # self.p = library.loadPreview(tr)
-
-            #     self.activePlay = btn

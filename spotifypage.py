@@ -1,5 +1,8 @@
+from doctest import master
+from typing import final
 import customtkinter as ctk
 import tkinter as tk
+import asyncio
 
 import library
 
@@ -12,7 +15,9 @@ class SpotifyPage(ctk.CTkFrame):
         self.playlistReviewFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
         self.addPlaylistFm = SpotifyPage.AddPlaylist(master=self, root=root)
-        self.addPlaylistFm.grid(row=0, column=1, sticky=tk.NSEW, padx=10, pady=10)
+        self.addPlaylistFm.grid(
+            row=0, column=1, sticky=tk.NSEW, ipadx=20, padx=10, pady=10
+        )
 
         self.columnconfigure(0, weight=1, uniform="group1")
         self.columnconfigure(1, weight=1, uniform="group1")
@@ -23,6 +28,10 @@ class SpotifyPage(ctk.CTkFrame):
             super().__init__(*args, **kwargs)
 
             self.root = root
+            self.final_songFrames = []
+
+            playlistLabel = ctk.CTkLabel(master=self, text="Current playlist")
+            playlistLabel.pack(side=tk.TOP, fill=tk.X, ipady=10)
 
             dummyFrame = ctk.CTkFrame(master=self)
             dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -39,16 +48,66 @@ class SpotifyPage(ctk.CTkFrame):
             )
             self.goBackBtn.pack()
 
-        def update(self):
-            for child in self.innerFrame.winfo_children():
-                child.destroy()
+        def addToFinal(self, addBtn, track):
+            finalFrame = ctk.CTkFrame(master=self.innerFrame)
+            finalFrame.addBtn = addBtn
 
-            for track in self.root.final_playlist:
-                label = ctk.CTkLabel(
-                    master=self.innerFrame,
-                    text=f"{track.track_title}, {track.id}",
-                )
-                label.pack()
+            album = ctk.CTkLabel(master=finalFrame,
+                anchor=tk.W,
+                # wraplength=100,
+                justify="center",
+                pady=10,)
+            library.load_song_album(album, track, size=(70,70))
+            album.pack(side=tk.LEFT)
+
+            titleLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=track.track_title,
+                anchor=tk.W,
+                # wraplength=100,
+                justify="center",
+                pady=10,
+            )
+            artistsText = track.artists[0]
+            for artist in track.artists[1:]:
+                artistsText += ", " + artist
+                if len(artistsText) >= 40:
+                    artistsText += ", ..."
+                    break
+            artistLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=artistsText,
+                anchor=tk.W,
+                wraplength=100,
+                justify="center",
+                pady=10,
+            )
+
+            titleLabel.pack(side=tk.LEFT, fill=tk.X, expand=1)
+            artistLabel.pack(side=tk.LEFT)
+            durationLabel = ctk.CTkLabel(
+                master=finalFrame,
+                text=track.duration,
+            )
+            durationLabel.pack(side=tk.LEFT)
+
+            removeBtn = ctk.CTkButton(
+                master=finalFrame,
+                text="X",
+                width=20,
+                command=lambda tr=track, f=finalFrame: self.removeFromFinal(f, tr),
+            )
+            removeBtn.pack(side=tk.LEFT)
+            finalFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            self.final_songFrames.append(finalFrame)
+
+            self.innerFrame.columnconfigure(1, weight=1)
+            return finalFrame
+
+        def removeFromFinal(self, del_frame, track):
+            del_frame.addBtn.configure(text="+")
+            del_frame.destroy()
+            self.root.final_playlist.remove(track)
 
     class AddPlaylist(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -57,6 +116,8 @@ class SpotifyPage(ctk.CTkFrame):
             self.root = root
 
             self.radio_var = tk.IntVar(master=self, value=0)
+            spacer = ctk.CTkLabel(master=self, text="")
+            spacer.grid(row=0, column=1)
 
             radioButton_1 = ctk.CTkRadioButton(
                 master=self,
@@ -80,14 +141,14 @@ class SpotifyPage(ctk.CTkFrame):
                 value=2,
             )
 
-            radioButton_1.grid(row=0, column=1)
-            radioButton_2.grid(row=1, column=1)
-            radioButton_3.grid(row=2, column=1)
+            radioButton_1.grid(row=1, column=1)
+            radioButton_2.grid(row=2, column=1)
+            radioButton_3.grid(row=3, column=1)
 
             dummyFrame_0 = ctk.CTkFrame(master=self)
             self.titleBar = ctk.CTkEntry(
                 master=dummyFrame_0,
-                placeholder_text="Enter anime title",
+                placeholder_text="Enter playlist title",
                 width=700,
             )
             self.titleBar.pack(side=tk.TOP)
@@ -108,7 +169,7 @@ class SpotifyPage(ctk.CTkFrame):
 
             self.frames = [dummyFrame_0, dummyFrame_1, dummyFrame_2]
             for frame in self.frames:
-                frame.grid(row=3, column=1, sticky=tk.NSEW)
+                frame.grid(row=4, column=1, sticky=tk.NSEW)
 
             radioButton_1.invoke()
 
@@ -120,7 +181,10 @@ class SpotifyPage(ctk.CTkFrame):
                     self.get_playlist(), self.root.final_playlist
                 ),
             )
-            self.addButton.grid(row=4, column=1)
+            self.addButton.grid(row=5, column=1)
+            self.columnconfigure(1, weight=1)
+            self.rowconfigure(4, weight=1)
+            self.rowconfigure(0, minsize=20)
 
         def frame_select(self):
             print(f"button {self.radio_var.get()} selected")
@@ -133,7 +197,7 @@ class SpotifyPage(ctk.CTkFrame):
 
             for i, pl in enumerate(user_pls["items"]):
                 label = ctk.CTkLabel(master=frame, text=pl["name"])
-                label.grid(row=i, column=0)
+                label.grid(row=i, column=0, sticky=tk.EW)
                 selectBtn = ctk.CTkButton(
                     master=frame,
                     text="select",
@@ -142,6 +206,7 @@ class SpotifyPage(ctk.CTkFrame):
                 selectBtn.grid(row=i, column=1)
                 selectBtn.pl = pl
                 self.selectButtons.append(selectBtn)
+            frame.columnconfigure(0, weight=1)
 
         def select_playlist(self, index):
             self.index = index
