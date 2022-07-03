@@ -5,7 +5,6 @@ from customtkinter import ThemeManager
 
 import library
 
-import asyncio
 import searchGUI_img
 
 
@@ -109,7 +108,6 @@ class AnimeList(ctk.CTkFrame):
 
             # takes the page number of search page, displays 10 anime from jikan search (5 pages, 50 total)
             for res in self.search_result["data"]:
-                # res = self.search_result["data"][i % 25]
                 if res["mal_id"] not in self.cachedFrames:
                     animeFrame = AnimeResult(
                         master=self.innerFrame, anime=res, root=self.root
