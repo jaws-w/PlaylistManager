@@ -37,7 +37,7 @@ spPKCE = SpotifyPKCE(
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
 user_id = sp.current_user()["id"]
-print(sp.current_user())
+print(user_id)
 
 
 def log_out_spotify():
@@ -214,11 +214,13 @@ class Playlist:
         self.animePage = None
 
     def update_playlist(self, tr, update_buttons=True):
-
         if tr in self.playlist.keys():
             self.playlist[tr].destroy()
-            self.playlist.pop(tr)
-            self.results.pop(tr)
+            del self.playlist[tr]
+            try:
+                del self.results[tr]
+            except KeyError:
+                print(f"{tr} has not been cached")
         else:
             track_frame = self.playlistPage.playlistFm.add_song_button(tr)
             self.playlist[tr] = track_frame
@@ -300,7 +302,6 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.image = img
     # print(f'Image fetched for {anime["title"]}')
     btn.update()
-
 
 
 def load_song_album(cover, track, size):

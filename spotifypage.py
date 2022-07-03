@@ -16,8 +16,8 @@ class SpotifyPage(ctk.CTkFrame):
             row=0, column=1, sticky=tk.NSEW, ipadx=20, padx=10, pady=10
         )
 
-        self.columnconfigure(0, weight=1, uniform="group1")
-        self.columnconfigure(1, weight=1, uniform="group1")
+        self.columnconfigure(0, weight=1, uniform="group_sp_1")
+        self.columnconfigure(1, weight=1, uniform="group_sp_1")
         self.rowconfigure(0, weight=1)
 
     class PlaylistReview(ctk.CTkFrame):

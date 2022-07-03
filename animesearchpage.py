@@ -7,8 +7,6 @@ import searchGUI_img
 
 # This page is responsible for search for anime by title and
 # displaying the list of opening/ending themes
-
-
 class AnimeSearchPage(ctk.CTkFrame):
     def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
