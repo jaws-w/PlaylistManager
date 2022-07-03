@@ -13,6 +13,8 @@ class AnimeSearchPage(ctk.CTkFrame):
     def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.root = root
+
         self.searchFm = ctk.CTkFrame(master=self, height=28)
         self.searchFm.place(relx=0.5, rely=0.3, anchor=tk.CENTER)
 
@@ -31,9 +33,14 @@ class AnimeSearchPage(ctk.CTkFrame):
         self.goToPlaylist = ctk.CTkButton(
             master=self.searchFm,
             text="current playlist >",
-            command=lambda: root.show_frame("PlaylistPage"),
+            command= self.nextPage
+            #root.show_frame("PlaylistPage"),
         )
         self.goToPlaylist.pack(padx=20, side=tk.LEFT)
+    
+    def nextPage(self):
+        self.unbind_all("<Return>")
+        self.root.show_frame("PlaylistPage")
 
     def searchAnime(self, event=None) -> None:
         print("button pressed")

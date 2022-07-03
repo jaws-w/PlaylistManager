@@ -11,6 +11,8 @@ class PlaylistPage(ctk.CTkFrame):
     def __init__(self, root, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.root = root
+
         self.player = library.MediaPlayer()
 
         self.playlistFm = PlaylistPage.PlaylistFrame(master=self, root=root)
@@ -27,7 +29,8 @@ class PlaylistPage(ctk.CTkFrame):
             master=self,
             text="< add more songs",
             pady=20,
-            command=lambda: root.show_frame("AnimeSearchPage"),
+            command= self.goBack
+            #root.show_frame("AnimeSearchPage"),
         )
         self.goBackBtn.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -38,6 +41,11 @@ class PlaylistPage(ctk.CTkFrame):
             command=lambda: root.show_frame("SpotifyPage"),
         )
         self.finalPlaylistBtn.grid(row=1, column=1, sticky=tk.NSEW, padx=10, pady=10)
+    
+    def goBack(self):
+        animePage = self.root.playlist.animePage
+        animePage.bind_all("<Return>", animePage.searchAnime)
+        self.root.show_frame("AnimeSearchPage")
 
     class PlaylistFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
