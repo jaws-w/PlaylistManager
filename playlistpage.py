@@ -123,6 +123,7 @@ class PlaylistPage(ctk.CTkFrame):
             for child in self.innerFrame.winfo_children():
 
                 child.pack_forget()
+            self.query = ""
             self.master.player.stop()
 
             self.label.configure(text="Add tracks to search!")

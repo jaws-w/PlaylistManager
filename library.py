@@ -26,6 +26,7 @@ import os
 load_dotenv()
 
 MARKET_CODE = "us"
+# scope = "playlist-modify-public playlist-modify-private"
 scope = "playlist-read-private playlist-modify-public playlist-modify-private"
 SPOTIPY_CLIENT_ID = "baffaf7266d04894a474288165840d28"
 SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
@@ -211,10 +212,7 @@ class Playlist:
         self.animePage = None
 
     def update_playlist(self, tr, update_buttons=True):
-        # if tr in self.playlist:
-        #     self.playlist.remove(tr)
-        # else:
-        #     self.playlist.add(tr)
+
         if tr in self.playlist.keys():
             self.playlist[tr].destroy()
             self.playlist.pop(tr)
