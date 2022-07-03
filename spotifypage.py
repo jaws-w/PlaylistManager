@@ -2,6 +2,7 @@ from doctest import master
 from typing import final
 import customtkinter as ctk
 import tkinter as tk
+import asyncio
 
 import library
 
@@ -50,6 +51,15 @@ class SpotifyPage(ctk.CTkFrame):
         def addToFinal(self, addBtn, track):
             finalFrame = ctk.CTkFrame(master=self.innerFrame)
             finalFrame.addBtn = addBtn
+
+            album = ctk.CTkLabel(master=finalFrame,
+                anchor=tk.W,
+                # wraplength=100,
+                justify="center",
+                pady=10,)
+            library.load_song_album(album, track, size=(70,70))
+            album.pack(side=tk.LEFT)
+
             titleLabel = ctk.CTkLabel(
                 master=finalFrame,
                 text=track.track_title,
@@ -87,7 +97,7 @@ class SpotifyPage(ctk.CTkFrame):
                 width=20,
                 command=lambda tr=track, f=finalFrame: self.removeFromFinal(f, tr),
             )
-            removeBtn.pack(side=tk.RIGHT)
+            removeBtn.pack(side=tk.LEFT)
             finalFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
             self.final_songFrames.append(finalFrame)
 
