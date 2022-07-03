@@ -53,6 +53,8 @@ class PlaylistPage(ctk.CTkFrame):
                 master=dummyFrame
             )
 
+            self.activeBtnFm = None
+
         def add_song_button(self, track):
 
             buttonHolderFrame = ctk.CTkFrame(master=self.innerFrame)
