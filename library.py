@@ -4,13 +4,8 @@ from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
 
-# from playsound import playsound
-# import pyaudio
-# import wave
-import time
 import vlc
 
-import threading
 
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -18,7 +13,6 @@ import re
 
 import customtkinter as ctk
 import tkinter as tk
-import asyncio
 import os
 
 # jikan = Jikan()
@@ -44,72 +38,56 @@ def log_out_spotify():
     os.remove(".cache")
 
 
-def create_scroll_canvas(master):
-    scroll_canvas = ctk.CTkCanvas(
-        master=master, bg="#343638", bd=0, highlightthickness=0
-    )
-    scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-
-    master.v = tk.Scrollbar(master=master, orient="vertical")
-    master.v.pack(side=tk.RIGHT, fill=tk.Y)
-    master.v.config(command=scroll_canvas.yview)
-
-    scroll_canvas.configure(yscrollcommand=master.v.set)
-
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
-    )
-
-    innerFrame = ctk.CTkFrame(master=scroll_canvas)
-    w = scroll_canvas.create_window((0, 0), window=innerFrame, anchor="nw")
-    innerFrame.bind("<Configure>", lambda event: canvasConfigure(scroll_canvas, event))
-    scroll_canvas.bind("<Configure>", lambda event: frameWidth(scroll_canvas, w, event))
-
-    scroll_canvas.bind("<Enter>", lambda event: enter(scroll_canvas, event))
-
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
-    )
-
-    return scroll_canvas, innerFrame
-
-
-def enter(scroll_canvas, event):
-    # print('entered')
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event2: on_vertical(scroll_canvas, event2)
-    )
-
-
-def frameWidth(scroll_canvas, w, event):
-    scroll_canvas.itemconfig(w, width=event.width)
-
-
-def canvasConfigure(scroll_canvas, event):
-    scroll_canvas.configure(scrollregion=scroll_canvas.bbox("all"))
-
-
-# enable trackpad/mousewheel scrolling
-def on_vertical(scroll_canvas, event):
-    scroll_canvas.yview_scroll(-1 * event.delta, "units")
-
-
-def toggle_scroll(parent_frame, scroll_canvas, inner_frame):
-    parent_frame.update()
-    outer_height = parent_frame.winfo_height()
-    inner_height = inner_frame.winfo_height()
-    print(parent_frame, outer_height, " ", inner_height)
-    if inner_height < outer_height and parent_frame.v.winfo_ismapped():
-        print("within limits")
-        parent_frame.v.pack_forget()
-        scroll_canvas.unbind_all("<Mousewheel>")
-    # elif inner_height > outer_height and not parent_frame.v.winfo_ismapped():
-    else:
-        print("exceeded")
-        parent_frame.v.pack(side=tk.RIGHT, fill=tk.Y)
-        scroll_canvas.bind_all(
-            "<MouseWheel>", lambda event2: on_vertical(scroll_canvas, event2)
+class Scrollable:
+    def __init__(self, master, root):
+        self.master = master
+        self.root = root
+        self.scroll_canvas = ctk.CTkCanvas(
+            master=master, bg="#343638", bd=0, highlightthickness=0
         )
+        self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.scroll_canvas.scroll_enabled = False
+
+        self.v = tk.Scrollbar(master=master, orient="vertical")
+        self.v.pack(side=tk.RIGHT, fill=tk.Y)
+        self.v.config(command=self.scroll_canvas.yview)
+
+        self.scroll_canvas.configure(yscrollcommand=self.v.set)
+
+        self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+        self.w = self.scroll_canvas.create_window(
+            (0, 0), window=self.innerFrame, anchor="nw"
+        )
+        self.innerFrame.bind("<Configure>", self.canvasConfigure)
+        self.scroll_canvas.bind("<Configure>", self.frameWidth)
+
+        self.scroll_canvas.bind(
+            "<Enter>",
+            lambda event: root.on_scrollable_enter(self.scroll_canvas, event),
+        )
+        self.scroll_canvas.bind("<Leave>", root.on_scrollable_leave)
+
+    def frameWidth(self, event):
+        self.scroll_canvas.itemconfig(self.w, width=event.width)
+
+    def canvasConfigure(self, event):
+        self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+
+    def toggle_scroll(self):
+        self.master.update()
+        outer_height = self.master.winfo_height()
+        inner_height = self.innerFrame.winfo_height()
+        print(outer_height, " ", inner_height)
+        if inner_height <= outer_height and self.v.winfo_ismapped():
+            print("within limits")
+            self.v.pack_forget()
+            self.scroll_canvas.scroll_enabled = False
+            self.root.on_scrollable_leave()
+        elif inner_height > outer_height:
+            print("exceeded")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            self.scroll_canvas.scroll_enabled = True
+            self.root.on_scrollable_enter(self.scroll_canvas)
 
 
 # def search_anime(anime_title, page, parameters):

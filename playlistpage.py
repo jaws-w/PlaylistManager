@@ -69,11 +69,17 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.dummyFrame = ctk.CTkFrame(master=self)
 
-            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-                master=self.dummyFrame
-            )
+            # self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
+            #     master=self.dummyFrame, root=self.root
+            # )
             # self.height = dummyFrame.winfo_screenheight
             # print(self.height)
+            # create scrollable frame
+            self.scrollable = library.Scrollable(master=self.dummyFrame, root=self.root)
+            self.scroll_canvas, self.innerFrame = (
+                self.scrollable.scroll_canvas,
+                self.scrollable.innerFrame,
+            )
 
             title.pack(side=tk.TOP)
             self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -125,7 +131,7 @@ class PlaylistPage(ctk.CTkFrame):
             self.toggle_scroll()
 
         def toggle_scroll(self):
-            library.toggle_scroll(self.dummyFrame, self.scroll_canvas, self.innerFrame)
+            self.scrollable.toggle_scroll()
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -143,8 +149,15 @@ class PlaylistPage(ctk.CTkFrame):
             self.album_img = ctk.CTkLabel(master=self, text="")
             self.album_img.pack(side=tk.TOP, pady=20)
 
-            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-                master=self
+            # self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
+            #     master=self, root=self.root
+            # )
+
+            # create scrollable frame
+            self.scrollable = library.Scrollable(master=self, root=self.root)
+            self.scroll_canvas, self.innerFrame = (
+                self.scrollable.scroll_canvas,
+                self.scrollable.innerFrame,
             )
             self.activePlay = None
 
@@ -274,4 +287,4 @@ class PlaylistPage(ctk.CTkFrame):
             self.master.player.play(tr.preview_url)
 
         def toggle_scroll(self):
-            library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
+            self.scrollable.toggle_scroll()

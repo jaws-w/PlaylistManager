@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import customtkinter as ctk
 import tkinter as tk
 
@@ -45,11 +46,14 @@ class tkinterApp(ctk.CTk):
         # data structures for holding playlist
         self.playlist = library.Playlist()
         self.final_playlist = []
+        self.scroll_target = None
 
         self.playlist.playlistPage = self.frames["PlaylistPage"]
         self.playlist.animePage = self.frames["AnimeSearchPage"]
 
         self.show_frame("AnimeSearchPage")
+
+        self.bind_all("<MouseWheel>", self.scroll_handler)
 
     # shows the corresponding page
     def show_frame(self, page: str) -> None:
@@ -57,6 +61,24 @@ class tkinterApp(ctk.CTk):
         frame.toggle_scroll()
         self.frames["PlaylistPage"].player.stop()
         frame.tkraise()
+
+    def on_scrollable_enter(self, scrollcanvas=None, event=None):
+        print("entered", scrollcanvas)
+        if scrollcanvas.scroll_enabled:
+            self.scroll_target = scrollcanvas
+
+    def on_scrollable_leave(self, event=None):
+        self.scroll_target = None
+
+    # enable trackpad/mousewheel scrolling
+    def scroll_handler(self, event):
+        if self.scroll_target:
+            if sys.platform.startswith("win32"):
+                self.scroll_target.yview_scroll(-1 * event.delta // 120, "units")
+            elif sys.platform.startswith("darwin"):
+                self.scroll_target.yview_scroll(-1 * event.delta, "units")
+            else:
+                self.scroll_target.yview_scroll(-1 * event.delta, "units")
 
     # updates the tkinter window
     async def updater(self, interval):

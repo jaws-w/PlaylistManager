@@ -79,7 +79,11 @@ class AnimeList(ctk.CTkFrame):
         self.page_num = 0
 
         # create scrollable frame
-        self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(master=self)
+        self.scrollable = library.Scrollable(master=self, root=self.root)
+        self.scroll_canvas, self.innerFrame = (
+            self.scrollable.scroll_canvas,
+            self.scrollable.innerFrame,
+        )
 
         # caches animeresult frames using mal_id as key
         self.cachedFrames = dict()
@@ -154,7 +158,7 @@ class AnimeList(ctk.CTkFrame):
             self.toggle_scroll()
 
     def toggle_scroll(self):
-        library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
+        self.scrollable.toggle_scroll()
 
 
 # Class for displaying anime results
