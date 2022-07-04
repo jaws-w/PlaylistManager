@@ -54,7 +54,7 @@ def create_scroll_canvas(master):
     master.v.pack(side=tk.RIGHT, fill=tk.Y)
     master.v.config(command=scroll_canvas.yview)
 
-    scroll_canvas.configure(yscrollcommand=master.v.set)
+    scroll_canvas.configure(yscrollcommand=master.v.set, yscrollincrement=1)
 
     scroll_canvas.bind_all(
         "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
@@ -73,11 +73,13 @@ def create_scroll_canvas(master):
 
     return scroll_canvas, innerFrame
 
+
 def enter(scroll_canvas, event):
-    #print('entered')
+    # print('entered')
     scroll_canvas.bind_all(
         "<MouseWheel>", lambda event2: on_vertical(scroll_canvas, event2)
     )
+
 
 def frameWidth(scroll_canvas, w, event):
     scroll_canvas.itemconfig(w, width=event.width)
@@ -91,23 +93,23 @@ def canvasConfigure(scroll_canvas, event):
 def on_vertical(scroll_canvas, event):
     scroll_canvas.yview_scroll(-1 * event.delta, "units")
 
+
 def checkPlaylistSize(root):
     root.update()
     playFm = root.playlist.playlistPage.playlistFm
     winheight = playFm.dummyFrame.winfo_height()
     innerheight = playFm.innerFrame.winfo_height()
     print(winheight, " ", innerheight)
-    if (innerheight < winheight and playFm.dummyFrame.v.winfo_ismapped()):
-        print('within limits')
+    if innerheight < winheight and playFm.dummyFrame.v.winfo_ismapped():
+        print("within limits")
         playFm.dummyFrame.v.pack_forget()
         playFm.scroll_canvas.unbind_all("<Mousewheel>")
-    elif (innerheight > winheight and not playFm.dummyFrame.v.winfo_ismapped()):
-        print('exceeded')
+    elif innerheight > winheight and not playFm.dummyFrame.v.winfo_ismapped():
+        print("exceeded")
         playFm.dummyFrame.v.pack(side=tk.RIGHT, fill=tk.Y)
         playFm.scroll_canvas.bind_all(
             "<MouseWheel>", lambda event2: on_vertical(playFm.scroll_canvas, event2)
-            )
-    
+        )
 
 
 # def search_anime(anime_title, page, parameters):
@@ -320,10 +322,11 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.update()
     # print(f'Image fetched for {anime["title"]}')
 
+
 def load_song_album(cover, track, size):
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     cover.configure(image=img)
     cover.image = img
     # target.pack(side=tk.TOP, pady=20)
-    print(f"Image fetched for {track.track_title}") 
+    print(f"Image fetched for {track.track_title}")
