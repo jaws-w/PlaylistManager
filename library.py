@@ -37,7 +37,7 @@ spPKCE = SpotifyPKCE(
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
 user_id = sp.current_user()["id"]
-print(sp.current_user())
+print(user_id)
 
 
 def log_out_spotify():
@@ -340,7 +340,6 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.image = img
     btn.update()
     # print(f'Image fetched for {anime["title"]}')
-
 
 def load_song_album(cover, track, size):
     imgRes = requests.get(track.album_cover["url"])

@@ -6,25 +6,26 @@ from customtkinter import ThemeManager
 
 import library
 
-
+# This page is responsible for displaying the tracks
+# selected on AnimeSearchPage and searching for them
+# on Spotify
 class PlaylistPage(ctk.CTkFrame):
     def __init__(self, root, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.root = root
 
+        self.root = root
+        # initialize the player for playing the previews
         self.player = library.MediaPlayer()
 
+        # initialize the two subframes side by side
         self.playlistFm = PlaylistPage.PlaylistFrame(master=self, root=root)
-        self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
-
         self.spotifyFm = PlaylistPage.SpotifySearchFrame(master=self, root=root)
+
+        self.playlistFm.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
         self.spotifyFm.grid(row=0, column=1, sticky=tk.NSEW, padx=10, pady=10)
 
-        self.columnconfigure(0, weight=1, uniform="group1")
-        self.columnconfigure(1, weight=1, uniform="group1")
-        self.rowconfigure(0, weight=1)
-
+        # buttons for going to the other pages
         self.goBackBtn = ctk.CTkButton(
             master=self,
             text="< add more songs",
@@ -32,16 +33,23 @@ class PlaylistPage(ctk.CTkFrame):
             command=self.goBack
             # root.show_frame("AnimeSearchPage"),
         )
-        self.goBackBtn.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
-
         self.finalPlaylistBtn = ctk.CTkButton(
             master=self,
             text="add current playlist to your Spotify library",
             pady=20,
             command=lambda: root.show_frame("SpotifyPage"),
         )
+
+        self.goBackBtn.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
         self.finalPlaylistBtn.grid(row=1, column=1, sticky=tk.NSEW, padx=10, pady=10)
 
+
+        # make the two columns equal width and rows full height
+        self.columnconfigure(0, weight=1, uniform="group_pl_1")
+        self.columnconfigure(1, weight=1, uniform="group_pl_1")
+        self.rowconfigure(0, weight=1)
+
+    
     def goBack(self):
         animePage = self.root.playlist.animePage
         animePage.bind_all("<Return>", animePage.searchAnime)
@@ -51,14 +59,18 @@ class PlaylistPage(ctk.CTkFrame):
         self.playlistFm.toggle_scroll()
         self.spotifyFm.toggle_scroll()
 
+    # subframe responsible for displaying the selected tracks
     class PlaylistFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
             self.activeBtnFm = None
 
+            # button corresponding to current search
+            self.activeBtnFm = None
+
+
             title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
-            title.pack(side=tk.TOP)
 
             self.dummyFrame = ctk.CTkFrame(master=self)
             self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -68,6 +80,9 @@ class PlaylistPage(ctk.CTkFrame):
             )
             # self.height = dummyFrame.winfo_screenheight
             # print(self.height)
+
+            title.pack(side=tk.TOP)
+            dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         def add_song_button(self, track):
 
