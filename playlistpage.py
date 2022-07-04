@@ -29,8 +29,8 @@ class PlaylistPage(ctk.CTkFrame):
             master=self,
             text="< add more songs",
             pady=20,
-            command= self.goBack
-            #root.show_frame("AnimeSearchPage"),
+            command=self.goBack
+            # root.show_frame("AnimeSearchPage"),
         )
         self.goBackBtn.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -41,7 +41,7 @@ class PlaylistPage(ctk.CTkFrame):
             command=lambda: root.show_frame("SpotifyPage"),
         )
         self.finalPlaylistBtn.grid(row=1, column=1, sticky=tk.NSEW, padx=10, pady=10)
-    
+
     def goBack(self):
         animePage = self.root.playlist.animePage
         animePage.bind_all("<Return>", animePage.searchAnime)
@@ -51,6 +51,7 @@ class PlaylistPage(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
+            self.activeBtnFm = None
 
             title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
             title.pack(side=tk.TOP)
@@ -61,8 +62,8 @@ class PlaylistPage(ctk.CTkFrame):
             self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
                 master=self.dummyFrame
             )
-            #self.height = dummyFrame.winfo_screenheight
-            #print(self.height)
+            # self.height = dummyFrame.winfo_screenheight
+            # print(self.height)
 
         def add_song_button(self, track):
 

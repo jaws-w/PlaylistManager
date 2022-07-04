@@ -237,11 +237,13 @@ class Playlist:
         self.animePage = None
 
     def update_playlist(self, tr, update_buttons=True):
-
         if tr in self.playlist.keys():
             self.playlist[tr].destroy()
-            self.playlist.pop(tr)
-            self.results.pop(tr)
+            del self.playlist[tr]
+            try:
+                del self.results[tr]
+            except KeyError:
+                print(f"{tr} has not been cached")
         else:
             track_frame = self.playlistPage.playlistFm.add_song_button(tr)
             self.playlist[tr] = track_frame
