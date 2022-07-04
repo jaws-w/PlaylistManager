@@ -1,8 +1,5 @@
-from doctest import master
-from typing import final
 import customtkinter as ctk
 import tkinter as tk
-import asyncio
 
 import library
 

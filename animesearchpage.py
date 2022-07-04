@@ -10,7 +10,7 @@ import searchGUI_img
 class AnimeSearchPage(ctk.CTkFrame):
     def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.root = root
 
         # holder frame for search bar and buttons
@@ -37,7 +37,6 @@ class AnimeSearchPage(ctk.CTkFrame):
         # holder for anime results
         self.animesList = AnimeList(master=self, root=root)
 
-    
     def nextPage(self):
         self.unbind_all("<Return>")
         self.root.update()
@@ -54,7 +53,7 @@ class AnimeSearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            asyncio.run(self.animesList.search(anime_title, 1))
+            self.animesList.search(anime_title, 1)
 
     # update the song buttons of the active frame
     def update_buttons(self):
@@ -129,7 +128,7 @@ class AnimeList(ctk.CTkFrame):
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1, ipady=10)
 
             for res in self.search_result["data"]:
-            
+
                 # create corresponding animeResult frame and caches it
                 if res["mal_id"] not in self.cachedFrames:
                     animeFrame = AnimeResult(
@@ -150,15 +149,12 @@ class AnimeList(ctk.CTkFrame):
 
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-
                 self.root.update()
 
             self.toggle_scroll()
 
     def toggle_scroll(self):
         library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
-
-
 
 
 # Class for displaying anime results
