@@ -102,7 +102,7 @@ class PlaylistPage(ctk.CTkFrame):
             )
             removeBtn.pack(side=tk.RIGHT)
             buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
-            self.root.update()
+            self.update()
 
             return buttonHolderFrame
 
@@ -122,7 +122,6 @@ class PlaylistPage(ctk.CTkFrame):
                 self.master.spotifyFm.clear_search()
 
             self.root.playlist.update_playlist(t)
-            # library.checkPlaylistSize(self.root)
             self.toggle_scroll()
 
         def toggle_scroll(self):
@@ -158,6 +157,7 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.label.configure(text="Add tracks to search!")
             self.album_img.configure(image="")
+            print("search cleared")
             self.toggle_scroll()
 
         def search_spotify(self, track):
@@ -268,7 +268,9 @@ class PlaylistPage(ctk.CTkFrame):
                 ].playlistReviewFm.addToFinal(btn, track)
 
         def playOnClick(self, tr):
-            self.root.loop.create_task(library.load_album_cover(self, tr))
+            self.root.loop.create_task(
+                library.load_album_cover(self, tr, size=(150, 150))
+            )
             self.master.player.play(tr.preview_url)
 
         def toggle_scroll(self):

@@ -50,8 +50,6 @@ class tkinterApp(ctk.CTk):
         self.playlist.animePage = self.frames["AnimeSearchPage"]
 
         self.show_frame("AnimeSearchPage")
-        self.show_frame("AnimeSearchPage")
-        # self.show_frame("SpotifyPage")
 
     # shows the corresponding page
     def show_frame(self, page: str) -> None:

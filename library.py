@@ -94,34 +94,17 @@ def on_vertical(scroll_canvas, event):
     scroll_canvas.yview_scroll(-1 * event.delta, "units")
 
 
-# def checkPlaylistSize(root):
-#     root.update()
-#     playFm = root.playlist.playlistPage.playlistFm
-#     winheight = playFm.dummyFrame.winfo_height()
-#     innerheight = playFm.innerFrame.winfo_height()
-#     print(winheight, " ", innerheight)
-#     if innerheight < winheight and playFm.dummyFrame.v.winfo_ismapped():
-#         print("within limits")
-#         playFm.dummyFrame.v.pack_forget()
-#         playFm.scroll_canvas.unbind_all("<Mousewheel>")
-#     elif innerheight > winheight and not playFm.dummyFrame.v.winfo_ismapped():
-#         print("exceeded")
-#         playFm.dummyFrame.v.pack(side=tk.RIGHT, fill=tk.Y)
-#         playFm.scroll_canvas.bind_all(
-#             "<MouseWheel>", lambda event2: on_vertical(playFm.scroll_canvas, event2)
-#         )
-
-
 def toggle_scroll(parent_frame, scroll_canvas, inner_frame):
     parent_frame.update()
     outer_height = parent_frame.winfo_height()
     inner_height = inner_frame.winfo_height()
-    print(outer_height, " ", inner_height)
+    print(parent_frame, outer_height, " ", inner_height)
     if inner_height < outer_height and parent_frame.v.winfo_ismapped():
         print("within limits")
         parent_frame.v.pack_forget()
         scroll_canvas.unbind_all("<Mousewheel>")
-    elif inner_height > outer_height and not parent_frame.v.winfo_ismapped():
+    # elif inner_height > outer_height and not parent_frame.v.winfo_ismapped():
+    else:
         print("exceeded")
         parent_frame.v.pack(side=tk.RIGHT, fill=tk.Y)
         scroll_canvas.bind_all(
@@ -340,6 +323,7 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.image = img
     btn.update()
     # print(f'Image fetched for {anime["title"]}')
+
 
 def load_song_album(cover, track, size):
     imgRes = requests.get(track.album_cover["url"])
