@@ -34,12 +34,13 @@ class AnimeSearchPage(ctk.CTkFrame):
             master=self.searchFm,
             text="current playlist >",
             command= self.nextPage
-            #root.show_frame("PlaylistPage"),
         )
         self.goToPlaylist.pack(padx=20, side=tk.LEFT)
     
     def nextPage(self):
         self.unbind_all("<Return>")
+        self.root.update()
+        library.checkPlaylistSize(self.root)
         self.root.show_frame("PlaylistPage")
 
     def searchAnime(self, event=None) -> None:

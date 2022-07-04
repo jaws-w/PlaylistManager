@@ -55,12 +55,14 @@ class PlaylistPage(ctk.CTkFrame):
             title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
             title.pack(side=tk.TOP)
 
-            dummyFrame = ctk.CTkFrame(master=self)
-            dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            self.dummyFrame = ctk.CTkFrame(master=self)
+            self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
             self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-                master=dummyFrame
+                master=self.dummyFrame
             )
+            #self.height = dummyFrame.winfo_screenheight
+            #print(self.height)
 
         def add_song_button(self, track):
 
@@ -86,6 +88,7 @@ class PlaylistPage(ctk.CTkFrame):
             )
             removeBtn.pack(side=tk.RIGHT)
             buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+            self.root.update()
 
             return buttonHolderFrame
 
@@ -105,6 +108,7 @@ class PlaylistPage(ctk.CTkFrame):
                 self.master.spotifyFm.clear_search()
 
             self.root.playlist.update_playlist(t)
+            library.checkPlaylistSize(self.root)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):

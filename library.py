@@ -50,11 +50,11 @@ def create_scroll_canvas(master):
     )
     scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-    v = tk.Scrollbar(master=master, orient="vertical")
-    v.pack(side=tk.RIGHT, fill=tk.Y)
-    v.config(command=scroll_canvas.yview)
+    master.v = tk.Scrollbar(master=master, orient="vertical")
+    master.v.pack(side=tk.RIGHT, fill=tk.Y)
+    master.v.config(command=scroll_canvas.yview)
 
-    scroll_canvas.configure(yscrollcommand=v.set)
+    scroll_canvas.configure(yscrollcommand=master.v.set)
 
     scroll_canvas.bind_all(
         "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
@@ -90,6 +90,24 @@ def canvasConfigure(scroll_canvas, event):
 # enable trackpad/mousewheel scrolling
 def on_vertical(scroll_canvas, event):
     scroll_canvas.yview_scroll(-1 * event.delta, "units")
+
+def checkPlaylistSize(root):
+    root.update()
+    playFm = root.playlist.playlistPage.playlistFm
+    winheight = playFm.dummyFrame.winfo_height()
+    innerheight = playFm.innerFrame.winfo_height()
+    print(winheight, " ", innerheight)
+    if (innerheight < winheight and playFm.dummyFrame.v.winfo_ismapped()):
+        print('within limits')
+        playFm.dummyFrame.v.pack_forget()
+        playFm.scroll_canvas.unbind_all("<Mousewheel>")
+    elif (innerheight > winheight and not playFm.dummyFrame.v.winfo_ismapped()):
+        print('exceeded')
+        playFm.dummyFrame.v.pack(side=tk.RIGHT, fill=tk.Y)
+        playFm.scroll_canvas.bind_all(
+            "<MouseWheel>", lambda event2: on_vertical(playFm.scroll_canvas, event2)
+            )
+    
 
 
 # def search_anime(anime_title, page, parameters):
