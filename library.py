@@ -86,8 +86,12 @@ class Scrollable:
         elif inner_height > outer_height:
             print("exceeded")
             self.v.pack(side=tk.RIGHT, fill=tk.Y)
-            self.scroll_canvas.scroll_enabled = True
-            self.root.on_scrollable_enter(self.scroll_canvas)
+            if not self.scroll_canvas.scroll_enabled:
+
+                self.scroll_canvas.scroll_enabled = True
+                self.root.on_scrollable_enter(self.scroll_canvas)
+            else:
+                self.scroll_canvas.scroll_enabled = True
 
 
 # def search_anime(anime_title, page, parameters):
