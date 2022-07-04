@@ -60,10 +60,9 @@ class PlaylistPage(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
-            self.activeBtnFm = None
 
             # button corresponding to current search
-            self.activeBtnFm = None
+            self.activeBtns = None
 
             title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
 
@@ -77,49 +76,52 @@ class PlaylistPage(ctk.CTkFrame):
 
             title.pack(side=tk.TOP)
             self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            self.innerFrame.columnconfigure(0, weight=1)
+
+            self.next_row = 0
 
         def add_song_button(self, track):
 
-            buttonHolderFrame = ctk.CTkFrame(master=self.innerFrame)
             songBtn = ctk.CTkButton(
-                master=buttonHolderFrame,
+                master=self.innerFrame,
                 text=f"{track[0]} by {track[1]}",
                 fg_color="gray",
                 width=60,
             )
             songBtn.track = track
             songBtn.configure(command=lambda i=songBtn: self.songBtnOnClick(i))
-            songBtn.pack(side=tk.LEFT, fill=tk.X, expand=1)
+            songBtn.grid(row=self.next_row, column=0, sticky=tk.EW)
 
-            buttonHolderFrame.songBtn = songBtn
             removeBtn = ctk.CTkButton(
-                master=buttonHolderFrame,
+                master=self.innerFrame,
                 text="X",
                 width=20,
             )
             removeBtn.configure(
                 command=lambda i=removeBtn, t=track: self.removeBtnOnClick(i, t)
             )
-            removeBtn.pack(side=tk.RIGHT)
-            buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+            removeBtn.grid(row=self.next_row, column=1)
+
             self.update()
+            songBtn.remBtn = removeBtn
+            removeBtn.sBtn = songBtn
+            self.next_row += 1
+            return songBtn, removeBtn
 
-            return buttonHolderFrame
-
-        def songBtnOnClick(self, btn):
-            print(btn.track)
-            for frame in self.root.playlist.playlist.values():
-                button = frame.songBtn
-                if button is btn:
+        def songBtnOnClick(self, songBtn):
+            print(songBtn.track)
+            for button, _ in self.root.playlist.playlist.values():
+                if button is songBtn:
                     button.configure(fg_color=ThemeManager.theme["color"]["button"])
                 else:
                     button.configure(fg_color="gray")
-            self.activeBtnFm = btn.master
-            self.master.spotifyFm.search_spotify(btn.track)
+            self.activeBtns = (songBtn, songBtn.remBtn)
+            self.master.spotifyFm.search_spotify(songBtn.track)
 
-        def removeBtnOnClick(self, btn, t):
-            if self.activeBtnFm is btn.master:
-                self.master.spotifyFm.clear_search()
+        def removeBtnOnClick(self, remBtn, t):
+            if self.activeBtns:
+                if self.activeBtns[1] is remBtn:
+                    self.master.spotifyFm.clear_search()
 
             self.root.playlist.update_playlist(t)
             self.toggle_scroll()

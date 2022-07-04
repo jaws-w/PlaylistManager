@@ -207,7 +207,8 @@ class Playlist:
 
     def update_playlist(self, tr, update_buttons=True):
         if tr in self.playlist.keys():
-            self.playlist[tr].destroy()
+            self.playlist[tr][0].destroy()
+            self.playlist[tr][1].destroy()
             del self.playlist[tr]
             try:
                 del self.results[tr]
