@@ -10,6 +10,8 @@ import searchGUI_img
 class AnimeSearchPage(ctk.CTkFrame):
     def __init__(self, root: searchGUI_img.tkinterApp, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        self.root = root
 
         # holder frame for search bar and buttons
         self.searchFm = ctk.CTkFrame(master=self, height=28)
@@ -22,9 +24,7 @@ class AnimeSearchPage(ctk.CTkFrame):
             master=self.searchFm, text="search", command=self.searchAnime
         )
         self.goToPlaylist = ctk.CTkButton(
-            master=self.searchFm,
-            text="current playlist >",
-            command=lambda: root.show_frame("PlaylistPage"),
+            master=self.searchFm, text="current playlist >", command=self.nextPage
         )
 
         self.searchBar.pack(side=tk.LEFT, pady=5, padx=(5, 0))
@@ -37,6 +37,13 @@ class AnimeSearchPage(ctk.CTkFrame):
         # holder for anime results
         self.animesList = AnimeList(master=self, root=root)
 
+    
+    def nextPage(self):
+        self.unbind_all("<Return>")
+        self.root.update()
+        # library.checkPlaylistSize(self.root)
+        self.root.show_frame("PlaylistPage")
+
     # takes searchbar content and queries Jikan api
     def searchAnime(self, event=None) -> None:
         print("search button pressed")
@@ -47,7 +54,7 @@ class AnimeSearchPage(ctk.CTkFrame):
             self.searchFm.pack(pady=50)
 
             self.animesList.pack(fill=tk.BOTH, expand=True)
-            self.animesList.search(anime_title, 1)
+            asyncio.run(self.animesList.search(anime_title, 1))
 
     # update the song buttons of the active frame
     def update_buttons(self):
@@ -56,6 +63,9 @@ class AnimeSearchPage(ctk.CTkFrame):
             if isinstance(animeresultFm, AnimeResult):
                 if animeresultFm.songsShown:
                     animeresultFm.update_buttons()
+
+    def toggle_scroll(self):
+        self.animesList.toggle_scroll()
 
 
 # holder frame for animeresults
@@ -119,14 +129,20 @@ class AnimeList(ctk.CTkFrame):
             buttonHolder.pack(side=tk.BOTTOM, fill=tk.X, expand=1, ipady=10)
 
             for res in self.search_result["data"]:
+            
                 # create corresponding animeResult frame and caches it
                 if res["mal_id"] not in self.cachedFrames:
                     animeFrame = AnimeResult(
-                        master=self.innerFrame, anime=res, root=self.root
+                        master=self.innerFrame,
+                        anime=res,
+                        root=self.root,
+                        animelist=self,
                     )
+
                     self.root.loop.create_task(
                         library.set_image(res, animeFrame.imgLabel)
                     )
+
                     self.cachedFrames[res["mal_id"]] = animeFrame
                 # fetch corresponding animeResult frame from cache
                 else:
@@ -134,14 +150,22 @@ class AnimeList(ctk.CTkFrame):
 
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
+
                 self.root.update()
+
+            self.toggle_scroll()
+
+    def toggle_scroll(self):
+        library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
+
+
 
 
 # Class for displaying anime results
 class AnimeResult(ctk.CTkFrame):
 
     # init Frame with Jikan anime search response as argument
-    def __init__(self, anime: dict, root: searchGUI_img.tkinterApp, *args, **kwargs):
+    def __init__(self, anime, root, animelist, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.anime = anime
@@ -149,6 +173,7 @@ class AnimeResult(ctk.CTkFrame):
         self.songListFrame = None
         self.songButtons = []
         self.root = root
+        self.animeList = animelist
 
         # holder for image, title, show songs button
         dummyFrame = ctk.CTkFrame(master=self)
@@ -236,6 +261,7 @@ class AnimeResult(ctk.CTkFrame):
             self.showButton.configure(text="Show songs")
             self.songListFrame.pack_forget()
 
+        self.animeList.toggle_scroll()
         self.songsShown = not self.songsShown
 
     # onClick function for song buttons

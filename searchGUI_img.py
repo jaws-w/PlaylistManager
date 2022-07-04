@@ -1,4 +1,3 @@
-import asyncio
 import customtkinter as ctk
 import tkinter as tk
 
@@ -13,13 +12,14 @@ ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
 class tkinterApp(ctk.CTk):
-    def __init__(self, loop: asyncio.AbstractEventLoop, interval: float = 1 / 120):
+    def __init__(self):
         super().__init__()
 
         self.loop = loop
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.tasks = []
         self.tasks.append(loop.create_task(self.updater(interval)))
+
 
         # default window size
         self.geometry("1920x1080")
@@ -50,10 +50,13 @@ class tkinterApp(ctk.CTk):
         self.playlist.animePage = self.frames["AnimeSearchPage"]
 
         self.show_frame("AnimeSearchPage")
+        self.show_frame("AnimeSearchPage")
+        # self.show_frame("SpotifyPage")
 
     # shows the corresponding page
     def show_frame(self, page: str) -> None:
         frame = self.frames[page]
+        frame.toggle_scroll()
         self.frames["PlaylistPage"].player.stop()
         frame.tkraise()
 
@@ -81,3 +84,4 @@ if __name__ == "__main__":
     app = tkinterApp(asyncioLoop)
     asyncioLoop.run_forever()
     asyncioLoop.close()
+

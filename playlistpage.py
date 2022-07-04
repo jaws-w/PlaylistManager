@@ -1,3 +1,4 @@
+import asyncio
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -12,6 +13,8 @@ class PlaylistPage(ctk.CTkFrame):
     def __init__(self, root, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
+        self.root = root
         # initialize the player for playing the previews
         self.player = library.MediaPlayer()
 
@@ -27,7 +30,8 @@ class PlaylistPage(ctk.CTkFrame):
             master=self,
             text="< add more songs",
             pady=20,
-            command=lambda: root.show_frame("AnimeSearchPage"),
+            command=self.goBack
+            # root.show_frame("AnimeSearchPage"),
         )
         self.finalPlaylistBtn = ctk.CTkButton(
             master=self,
@@ -39,26 +43,43 @@ class PlaylistPage(ctk.CTkFrame):
         self.goBackBtn.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
         self.finalPlaylistBtn.grid(row=1, column=1, sticky=tk.NSEW, padx=10, pady=10)
 
+
         # make the two columns equal width and rows full height
         self.columnconfigure(0, weight=1, uniform="group_pl_1")
         self.columnconfigure(1, weight=1, uniform="group_pl_1")
         self.rowconfigure(0, weight=1)
+
+    
+    def goBack(self):
+        animePage = self.root.playlist.animePage
+        animePage.bind_all("<Return>", animePage.searchAnime)
+        self.root.show_frame("AnimeSearchPage")
+
+    def toggle_scroll(self):
+        self.playlistFm.toggle_scroll()
+        self.spotifyFm.toggle_scroll()
 
     # subframe responsible for displaying the selected tracks
     class PlaylistFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.root = root
+            self.activeBtnFm = None
 
             # button corresponding to current search
             self.activeBtnFm = None
 
+
             title = ctk.CTkLabel(master=self, pady=20, text="Selected tracks")
-            dummyFrame = ctk.CTkFrame(master=self)
+
+            self.dummyFrame = ctk.CTkFrame(master=self)
+            self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
             self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-                master=dummyFrame
+                master=self.dummyFrame
             )
+            # self.height = dummyFrame.winfo_screenheight
+            # print(self.height)
 
             title.pack(side=tk.TOP)
             dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -87,6 +108,7 @@ class PlaylistPage(ctk.CTkFrame):
             )
             removeBtn.pack(side=tk.RIGHT)
             buttonHolderFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
+            self.root.update()
 
             return buttonHolderFrame
 
@@ -99,13 +121,18 @@ class PlaylistPage(ctk.CTkFrame):
                 else:
                     button.configure(fg_color="gray")
             self.activeBtnFm = btn.master
-            self.master.spotifyFm.search_spotify(btn.track)
+            asyncio.run(self.master.spotifyFm.search_spotify(btn.track))
 
         def removeBtnOnClick(self, btn, t):
             if self.activeBtnFm is btn.master:
                 self.master.spotifyFm.clear_search()
 
             self.root.playlist.update_playlist(t)
+            # library.checkPlaylistSize(self.root)
+            self.toggle_scroll()
+
+        def toggle_scroll(self):
+            library.toggle_scroll(self.dummyFrame, self.scroll_canvas, self.innerFrame)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -130,15 +157,16 @@ class PlaylistPage(ctk.CTkFrame):
 
         def clear_search(self):
             for child in self.innerFrame.winfo_children():
-
                 child.pack_forget()
+
             self.query = ""
             self.master.player.stop()
 
             self.label.configure(text="Add tracks to search!")
             self.album_img.configure(image="")
+            self.toggle_scroll()
 
-        def search_spotify(self, track):
+        async def search_spotify(self, track):
 
             if self.query == track:
                 return
@@ -169,10 +197,7 @@ class PlaylistPage(ctk.CTkFrame):
                         bd=0,
                     )
                     playBtn.configure(command=lambda tr=sp_track: self.playOnClick(tr))
-                    self.root.loop.create_task(
-                        library.setButtonCover(playBtn, sp_track)
-                    )
-                    # self.root.tasks.append(task)
+                    asyncio.create_task(library.setButtonCover(playBtn, sp_track))
                     playBtn.grid(row=i, column=0)
 
                     changeFinal = ctk.CTkButton(master=dummyFrame, width=60)
@@ -225,11 +250,13 @@ class PlaylistPage(ctk.CTkFrame):
                 self.root.playlist.results[track] = dummyFrame
 
             dummyFrame.pack(fill=tk.BOTH, expand=1)
+            self.toggle_scroll()
+
             self.update()
 
-        def clearSearch(self):
-            for child in self.winfo_children():
-                child.destroy()
+        # def clearSearch(self):
+        #     for child in self.winfo_children():
+        #         child.destroy()
 
         def updatefinal(self, btn, track):
             if track in self.root.final_playlist:
@@ -245,7 +272,8 @@ class PlaylistPage(ctk.CTkFrame):
                 ].playlistReviewFm.addToFinal(btn, track)
 
         def playOnClick(self, tr):
-            self.root.loop.create_task(
-                library.load_album_cover(self, tr, size=(150, 150))
-            )
+            asyncio.run(library.load_album_cover(self, tr))
             self.master.player.play(tr.preview_url)
+
+        def toggle_scroll(self):
+            library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
