@@ -43,29 +43,49 @@ class SpotifyPage(ctk.CTkFrame):
                 self.scrollable.scroll_canvas,
                 self.scrollable.innerFrame,
             )
+
+            self.innerFrame.columnconfigure(1, weight=1)
+            self.next_row = 0
+
             self.goBackBtn = ctk.CTkButton(
                 master=self,
                 text="< edit playlist",
                 pady=20,
                 command=lambda: root.show_frame("PlaylistPage"),
             )
-            self.goBackBtn.pack()
+            self.goBackBtn.pack(fill=tk.X)
 
         def addToFinal(self, addBtn, track):
-            finalFrame = ctk.CTkFrame(master=self.innerFrame)
-            finalFrame.addBtn = addBtn
+            finalFrame = SpotifyPage.SpotifyTrackDisplay(
+                addBtn, self.innerFrame, track, self.next_row, self
+            )
+            self.next_row += 1
+            return finalFrame
 
-            album = ctk.CTkLabel(
-                master=finalFrame,
+        def removeFromFinal(self, del_frame, track):
+            del_frame.addBtn.configure(text="+")
+            del_frame.destroy()
+            self.root.final_playlist.remove(track)
+            self.toggle_scroll()
+
+        def toggle_scroll(self):
+            self.scrollable.toggle_scroll()
+
+    class SpotifyTrackDisplay:
+        def __init__(self, addBtn, master, track, row, plrev) -> None:
+            self.addBtn = addBtn
+
+            self.album = ctk.CTkLabel(
+                master=master,
                 anchor=tk.W,
                 justify="center",
                 pady=10,
             )
-            library.load_song_album(album, track, size=(70, 70))
-            album.pack(side=tk.LEFT)
+            library.load_song_album(self.album, track, size=(70, 70))
+            self.album.grid(row=row, column=0, sticky=tk.NSEW)
 
-            titleLabel = ctk.CTkLabel(
-                master=finalFrame,
+            self.titleLabel = ctk.CTkLabel(
+                master=master,
                 text=track.track_title,
                 anchor=tk.W,
                 justify="center",
@@ -77,8 +97,8 @@ class SpotifyPage(ctk.CTkFrame):
                 if len(artistsText) >= 40:
                     artistsText += ", ..."
                     break
-            artistLabel = ctk.CTkLabel(
-                master=finalFrame,
+            self.artistLabel = ctk.CTkLabel(
+                master=master,
                 text=artistsText,
                 anchor=tk.W,
                 wraplength=100,
@@ -86,35 +106,28 @@ class SpotifyPage(ctk.CTkFrame):
                 pady=10,
             )
 
-            titleLabel.pack(side=tk.LEFT, fill=tk.X, expand=1)
-            artistLabel.pack(side=tk.LEFT)
-            durationLabel = ctk.CTkLabel(
-                master=finalFrame,
+            self.titleLabel.grid(row=row, column=1, sticky=tk.NSEW)
+            self.artistLabel.grid(row=row, column=2, sticky=tk.NSEW)
+            self.durationLabel = ctk.CTkLabel(
+                master=master,
                 text=track.duration,
             )
-            durationLabel.pack(side=tk.LEFT)
+            self.durationLabel.grid(row=row, column=3, sticky=tk.NSEW)
 
-            removeBtn = ctk.CTkButton(
-                master=finalFrame,
+            self.removeBtn = ctk.CTkButton(
+                master=master,
                 text="X",
                 width=20,
-                command=lambda tr=track, f=finalFrame: self.removeFromFinal(f, tr),
+                command=lambda tr=track, f=self: plrev.removeFromFinal(f, tr),
             )
-            removeBtn.pack(side=tk.LEFT)
-            finalFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-            self.final_songFrames.append(finalFrame)
+            self.removeBtn.grid(row=row, column=4, sticky=tk.NSEW)
 
-            self.innerFrame.columnconfigure(1, weight=1)
-            return finalFrame
-
-        def removeFromFinal(self, del_frame, track):
-            del_frame.addBtn.configure(text="+")
-            del_frame.destroy()
-            self.root.final_playlist.remove(track)
-            self.toggle_scroll()
-
-        def toggle_scroll(self):
-            self.scrollable.toggle_scroll()
+        def destroy(self):
+            self.album.destroy()
+            self.titleLabel.destroy()
+            self.artistLabel.destroy()
+            self.removeBtn.destroy()
+            self.durationLabel.destroy()
 
     class AddPlaylist(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -194,7 +207,7 @@ class SpotifyPage(ctk.CTkFrame):
                     self.get_playlist(), self.root.final_playlist
                 ),
             )
-            self.addButton.grid(row=5, column=1)
+            self.addButton.grid(row=5, column=1, sticky=tk.EW)
             self.columnconfigure(1, weight=1)
             self.rowconfigure(4, weight=1)
             self.rowconfigure(0, minsize=20)
