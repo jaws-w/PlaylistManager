@@ -31,16 +31,14 @@ class AnimeSearchPage(ctk.CTkFrame):
         self.searchBtn.pack(padx=20, expand=False, side=tk.LEFT)
 
         self.goToPlaylist = ctk.CTkButton(
-            master=self.searchFm,
-            text="current playlist >",
-            command= self.nextPage
+            master=self.searchFm, text="current playlist >", command=self.nextPage
         )
         self.goToPlaylist.pack(padx=20, side=tk.LEFT)
-    
+
     def nextPage(self):
         self.unbind_all("<Return>")
         self.root.update()
-        library.checkPlaylistSize(self.root)
+        # library.checkPlaylistSize(self.root)
         self.root.show_frame("PlaylistPage")
 
     def searchAnime(self, event=None) -> None:
@@ -61,6 +59,9 @@ class AnimeSearchPage(ctk.CTkFrame):
             if isinstance(anime, AnimeResult):
                 if anime.songsShown:
                     anime.update_buttons()
+
+    def toggle_scroll(self):
+        self.animesList.toggle_scroll()
 
 
 class AnimeList(ctk.CTkFrame):
@@ -120,7 +121,10 @@ class AnimeList(ctk.CTkFrame):
                 # res = self.search_result["data"][i % 25]
                 if res["mal_id"] not in self.cachedFrames:
                     animeFrame = AnimeResult(
-                        master=self.innerFrame, anime=res, root=self.root
+                        master=self.innerFrame,
+                        anime=res,
+                        root=self.root,
+                        animelist=self,
                     )
 
                     asyncio.create_task(library.set_image(res, animeFrame.imgLabel))
@@ -132,6 +136,10 @@ class AnimeList(ctk.CTkFrame):
                 animeFrame.pack(side=tk.TOP, fill=tk.X, expand=1)
 
                 self.master.update()
+            self.toggle_scroll()
+
+    def toggle_scroll(self):
+        library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)
 
     def diffPage(self, query, pagenum):
 
@@ -142,7 +150,7 @@ class AnimeList(ctk.CTkFrame):
 class AnimeResult(ctk.CTkFrame):
 
     # init Frame with Jikan anime search response as argument
-    def __init__(self, anime, root, *args, **kwargs):
+    def __init__(self, anime, root, animelist, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.anime = anime
@@ -150,6 +158,7 @@ class AnimeResult(ctk.CTkFrame):
         self.songListFrame = None
         self.songButtons = []
         self.root = root
+        self.animeList = animelist
 
         dummyFrame = ctk.CTkFrame(master=self)
         dummyFrame.pack(side=tk.TOP, fill=tk.X)
@@ -233,6 +242,7 @@ class AnimeResult(ctk.CTkFrame):
             self.showButton.configure(text="Show songs")
             self.songListFrame.pack_forget()
 
+        self.animeList.toggle_scroll()
         self.songsShown = not self.songsShown
 
     def update_buttons(self):

@@ -46,6 +46,7 @@ class tkinterApp(ctk.CTk):
 
     def show_frame(self, page: str) -> None:
         frame = self.frames[page]
+        frame.toggle_scroll()
         self.frames["PlaylistPage"].player.stop()
         frame.tkraise()
 

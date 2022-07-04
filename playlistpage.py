@@ -47,6 +47,10 @@ class PlaylistPage(ctk.CTkFrame):
         animePage.bind_all("<Return>", animePage.searchAnime)
         self.root.show_frame("AnimeSearchPage")
 
+    def toggle_scroll(self):
+        self.playlistFm.toggle_scroll()
+        self.spotifyFm.toggle_scroll()
+
     class PlaylistFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -109,7 +113,11 @@ class PlaylistPage(ctk.CTkFrame):
                 self.master.spotifyFm.clear_search()
 
             self.root.playlist.update_playlist(t)
-            library.checkPlaylistSize(self.root)
+            # library.checkPlaylistSize(self.root)
+            self.toggle_scroll()
+
+        def toggle_scroll(self):
+            library.toggle_scroll(self.dummyFrame, self.scroll_canvas, self.innerFrame)
 
     class SpotifySearchFrame(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -134,13 +142,14 @@ class PlaylistPage(ctk.CTkFrame):
 
         def clear_search(self):
             for child in self.innerFrame.winfo_children():
-
                 child.pack_forget()
+
             self.query = ""
             self.master.player.stop()
 
             self.label.configure(text="Add tracks to search!")
             self.album_img.configure(image="")
+            self.toggle_scroll()
 
         async def search_spotify(self, track):
 
@@ -226,11 +235,13 @@ class PlaylistPage(ctk.CTkFrame):
                 self.root.playlist.results[track] = dummyFrame
 
             dummyFrame.pack(fill=tk.BOTH, expand=1)
+            self.toggle_scroll()
+
             self.update()
 
-        def clearSearch(self):
-            for child in self.winfo_children():
-                child.destroy()
+        # def clearSearch(self):
+        #     for child in self.winfo_children():
+        #         child.destroy()
 
         def updatefinal(self, btn, track):
             if track in self.root.final_playlist:
@@ -248,3 +259,6 @@ class PlaylistPage(ctk.CTkFrame):
         def playOnClick(self, tr):
             asyncio.run(library.load_album_cover(self, tr))
             self.master.player.play(tr.preview_url)
+
+        def toggle_scroll(self):
+            library.toggle_scroll(self, self.scroll_canvas, self.innerFrame)

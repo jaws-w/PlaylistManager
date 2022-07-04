@@ -23,6 +23,10 @@ class SpotifyPage(ctk.CTkFrame):
         self.columnconfigure(1, weight=1, uniform="group1")
         self.rowconfigure(0, weight=1)
 
+    def toggle_scroll(self):
+        self.playlistReviewFm.toggle_scroll()
+        self.addPlaylistFm.toggle_scroll()
+
     class PlaylistReview(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -33,11 +37,11 @@ class SpotifyPage(ctk.CTkFrame):
             playlistLabel = ctk.CTkLabel(master=self, text="Current playlist")
             playlistLabel.pack(side=tk.TOP, fill=tk.X, ipady=10)
 
-            dummyFrame = ctk.CTkFrame(master=self)
-            dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            self.dummyFrame = ctk.CTkFrame(master=self)
+            self.dummyFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
             self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-                master=dummyFrame
+                master=self.dummyFrame
             )
 
             self.goBackBtn = ctk.CTkButton(
@@ -52,12 +56,14 @@ class SpotifyPage(ctk.CTkFrame):
             finalFrame = ctk.CTkFrame(master=self.innerFrame)
             finalFrame.addBtn = addBtn
 
-            album = ctk.CTkLabel(master=finalFrame,
+            album = ctk.CTkLabel(
+                master=finalFrame,
                 anchor=tk.W,
                 # wraplength=100,
                 justify="center",
-                pady=10,)
-            library.load_song_album(album, track, size=(70,70))
+                pady=10,
+            )
+            library.load_song_album(album, track, size=(70, 70))
             album.pack(side=tk.LEFT)
 
             titleLabel = ctk.CTkLabel(
@@ -108,6 +114,10 @@ class SpotifyPage(ctk.CTkFrame):
             del_frame.addBtn.configure(text="+")
             del_frame.destroy()
             self.root.final_playlist.remove(track)
+            self.toggle_scroll()
+
+        def toggle_scroll(self):
+            library.toggle_scroll(self.dummyFrame, self.scroll_canvas, self.innerFrame)
 
     class AddPlaylist(ctk.CTkFrame):
         def __init__(self, root, *args, **kwargs):
@@ -153,11 +163,11 @@ class SpotifyPage(ctk.CTkFrame):
             )
             self.titleBar.pack(side=tk.TOP)
 
-            dummyFrame_1 = ctk.CTkFrame(master=self)
-            scroll_canvas, innerFrame = library.create_scroll_canvas(
-                master=dummyFrame_1
+            self.dummyFrame_1 = ctk.CTkFrame(master=self)
+            self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
+                master=self.dummyFrame_1
             )
-            self.load_playlists(innerFrame)
+            self.load_playlists(self.innerFrame)
 
             dummyFrame_2 = ctk.CTkFrame(master=self)
             self.idBar = ctk.CTkEntry(
@@ -167,7 +177,7 @@ class SpotifyPage(ctk.CTkFrame):
             )
             self.idBar.pack(side=tk.TOP)
 
-            self.frames = [dummyFrame_0, dummyFrame_1, dummyFrame_2]
+            self.frames = [dummyFrame_0, self.dummyFrame_1, dummyFrame_2]
             for frame in self.frames:
                 frame.grid(row=4, column=1, sticky=tk.NSEW)
 
@@ -219,3 +229,8 @@ class SpotifyPage(ctk.CTkFrame):
                     return self.selectButtons[self.index].pl
                 case 2:
                     return library.get_playlist(self.idBar.get())
+
+        def toggle_scroll(self):
+            library.toggle_scroll(
+                self.dummyFrame_1, self.scroll_canvas, self.innerFrame
+            )
