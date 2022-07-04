@@ -69,12 +69,6 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.dummyFrame = ctk.CTkFrame(master=self)
 
-            # self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-            #     master=self.dummyFrame, root=self.root
-            # )
-            # self.height = dummyFrame.winfo_screenheight
-            # print(self.height)
-            # create scrollable frame
             self.scrollable = library.Scrollable(master=self.dummyFrame, root=self.root)
             self.scroll_canvas, self.innerFrame = (
                 self.scrollable.scroll_canvas,
@@ -148,10 +142,6 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.album_img = ctk.CTkLabel(master=self, text="")
             self.album_img.pack(side=tk.TOP, pady=20)
-
-            # self.scroll_canvas, self.innerFrame = library.create_scroll_canvas(
-            #     master=self, root=self.root
-            # )
 
             # create scrollable frame
             self.scrollable = library.Scrollable(master=self, root=self.root)

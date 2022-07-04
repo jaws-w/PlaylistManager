@@ -170,9 +170,6 @@ def search_spotify(song, artist):
     print(query)
     res = sp.search(query, type="track", market=MARKET_CODE, limit=25)
 
-    # if res["tracks"]["total"] == 0:
-    #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
-    #     res = sp.search(query, type="track", market=MARKET_CODE)
     tracks = [SpotifyTrack(song) for song in res["tracks"]["items"]]
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
@@ -187,7 +184,6 @@ def new_playlist(title):
         name=title,
         public=False,
         collaborative=False,
-        # description="hi",
     )
 
 
@@ -196,13 +192,6 @@ def get_playlist(id):
 
 
 def addPlaylist(spotify_playlist, final_playlist):
-    # spotify_playlist = sp.user_playlist_create(
-    #     user_id,
-    #     name="testing playlist",
-    #     public=False,
-    #     collaborative=False,
-    #     description="hi",
-    # )
     print(spotify_playlist["id"])
     items = [track.id for track in final_playlist]
     print(items)
@@ -249,16 +238,6 @@ class SpotifyTrack:
         return f"{minutes}:{seconds:02d}"
 
 
-# def loadPreview(track):
-#     p = vlc.MediaPlayer(track.preview_url)
-#     p.play()
-#     return p
-
-
-# def stopPreview(p):
-#     p.stop()
-
-
 class MediaPlayer:
     def __init__(self) -> None:
         self.player = vlc.MediaPlayer()
@@ -289,7 +268,6 @@ async def load_album_cover(searchFrame, track, size):
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
-    # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")
     searchFrame.update()
 
@@ -300,7 +278,6 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
     btn.update()
-    # print(f'Image fetched for {anime["title"]}')
 
 
 def load_song_album(cover, track, size):
@@ -308,5 +285,4 @@ def load_song_album(cover, track, size):
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     cover.configure(image=img)
     cover.image = img
-    # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")

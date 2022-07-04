@@ -40,7 +40,6 @@ class AnimeSearchPage(ctk.CTkFrame):
     def nextPage(self):
         self.unbind_all("<Return>")
         self.root.update()
-        # library.checkPlaylistSize(self.root)
         self.root.show_frame("PlaylistPage")
 
     # takes searchbar content and queries Jikan api
