@@ -1,11 +1,8 @@
 import requests
-from jikanpy import Jikan
-from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
-
+import sys
 import vlc
-
 
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -15,9 +12,6 @@ import customtkinter as ctk
 import tkinter as tk
 import os
 
-# jikan = Jikan()
-
-load_dotenv()
 
 MARKET_CODE = "us"
 # scope = "playlist-modify-public playlist-modify-private"
@@ -94,11 +88,6 @@ class Scrollable:
                 self.scroll_canvas.scroll_enabled = True
 
 
-# def search_anime(anime_title, page, parameters):
-#     print(f"Searching for page {page} of {anime_title}")
-#     return jikan.search("anime", anime_title, page=page, parameters=parameters)
-
-
 def search_anime(anime_title: str, page: int):
     api_endpoint = "http://staging.jikan.moe/v4/anime"
     query = f"?q={anime_title}&sfw&page={page}"
@@ -118,20 +107,6 @@ def parse_track(track):
         raise ValueError
 
     return (title, artist)
-
-
-# def get_songs(anime):
-#     anime_res = jikan.anime(anime["mal_id"])
-#     ops = []
-#     eds = []
-
-#     for tr in anime_res["opening_themes"]:
-#         ops.append(parse_track(tr))
-
-#     for tr in anime_res["ending_themes"]:
-#         eds.append(parse_track(tr))
-
-#     return {"openings": ops, "endings": eds}
 
 
 def get_songs(anime):
