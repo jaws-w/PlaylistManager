@@ -1,16 +1,8 @@
 import requests
-from jikanpy import Jikan
-from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
-
-# from playsound import playsound
-# import pyaudio
-# import wave
-import time
+import sys
 import vlc
-
-import threading
 
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -18,12 +10,8 @@ import re
 
 import customtkinter as ctk
 import tkinter as tk
-import asyncio
 import os
 
-# jikan = Jikan()
-
-load_dotenv()
 
 MARKET_CODE = "us"
 # scope = "playlist-modify-public playlist-modify-private"
@@ -37,64 +25,67 @@ spPKCE = SpotifyPKCE(
 
 sp = spotipy.Spotify(auth_manager=spPKCE)
 user_id = sp.current_user()["id"]
-print(sp.current_user())
+print(user_id)
 
 
 def log_out_spotify():
     os.remove(".cache")
 
 
-def create_scroll_canvas(master):
-    scroll_canvas = ctk.CTkCanvas(
-        master=master, bg="#343638", bd=0, highlightthickness=0
-    )
-    scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+class Scrollable:
+    def __init__(self, master, root):
+        self.master = master
+        self.root = root
+        self.scroll_canvas = ctk.CTkCanvas(
+            master=master, bg="#343638", bd=0, highlightthickness=0
+        )
+        self.scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.scroll_canvas.scroll_enabled = False
 
-    v = tk.Scrollbar(master=master, orient="vertical")
-    v.pack(side=tk.RIGHT, fill=tk.Y)
-    v.config(command=scroll_canvas.yview)
+        self.v = tk.Scrollbar(master=master, orient="vertical")
+        self.v.pack(side=tk.RIGHT, fill=tk.Y)
+        self.v.config(command=self.scroll_canvas.yview)
 
-    scroll_canvas.configure(yscrollcommand=v.set)
+        self.scroll_canvas.configure(yscrollcommand=self.v.set)
 
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
-    )
+        self.innerFrame = ctk.CTkFrame(master=self.scroll_canvas)
+        self.w = self.scroll_canvas.create_window(
+            (0, 0), window=self.innerFrame, anchor="nw"
+        )
+        self.innerFrame.bind("<Configure>", self.canvasConfigure)
+        self.scroll_canvas.bind("<Configure>", self.frameWidth)
 
-    innerFrame = ctk.CTkFrame(master=scroll_canvas)
-    w = scroll_canvas.create_window((0, 0), window=innerFrame, anchor="nw")
-    innerFrame.bind("<Configure>", lambda event: canvasConfigure(scroll_canvas, event))
-    scroll_canvas.bind("<Configure>", lambda event: frameWidth(scroll_canvas, w, event))
+        self.scroll_canvas.bind(
+            "<Enter>",
+            lambda event: root.on_scrollable_enter(self.scroll_canvas, event),
+        )
+        self.scroll_canvas.bind("<Leave>", root.on_scrollable_leave)
 
-    scroll_canvas.bind("<Enter>", lambda event: enter(scroll_canvas, event))
+    def frameWidth(self, event):
+        self.scroll_canvas.itemconfig(self.w, width=event.width)
 
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event: on_vertical(scroll_canvas, event)
-    )
+    def canvasConfigure(self, event):
+        self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
 
-    return scroll_canvas, innerFrame
+    def toggle_scroll(self):
+        self.master.update()
+        outer_height = self.master.winfo_height()
+        inner_height = self.innerFrame.winfo_height()
+        print(outer_height, " ", inner_height)
+        if inner_height <= outer_height and self.v.winfo_ismapped():
+            print("within limits")
+            self.v.pack_forget()
+            self.scroll_canvas.scroll_enabled = False
+            self.root.on_scrollable_leave()
+        elif inner_height > outer_height:
+            print("exceeded")
+            self.v.pack(side=tk.RIGHT, fill=tk.Y)
+            if not self.scroll_canvas.scroll_enabled:
 
-def enter(scroll_canvas, event):
-    #print('entered')
-    scroll_canvas.bind_all(
-        "<MouseWheel>", lambda event2: on_vertical(scroll_canvas, event2)
-    )
-
-def frameWidth(scroll_canvas, w, event):
-    scroll_canvas.itemconfig(w, width=event.width)
-
-
-def canvasConfigure(scroll_canvas, event):
-    scroll_canvas.configure(scrollregion=scroll_canvas.bbox("all"))
-
-
-# enable trackpad/mousewheel scrolling
-def on_vertical(scroll_canvas, event):
-    scroll_canvas.yview_scroll(-1 * event.delta, "units")
-
-
-# def search_anime(anime_title, page, parameters):
-#     print(f"Searching for page {page} of {anime_title}")
-#     return jikan.search("anime", anime_title, page=page, parameters=parameters)
+                self.scroll_canvas.scroll_enabled = True
+                self.root.on_scrollable_enter(self.scroll_canvas)
+            else:
+                self.scroll_canvas.scroll_enabled = True
 
 
 def search_anime(anime_title: str, page: int):
@@ -116,20 +107,6 @@ def parse_track(track):
         raise ValueError
 
     return (title, artist)
-
-
-# def get_songs(anime):
-#     anime_res = jikan.anime(anime["mal_id"])
-#     ops = []
-#     eds = []
-
-#     for tr in anime_res["opening_themes"]:
-#         ops.append(parse_track(tr))
-
-#     for tr in anime_res["ending_themes"]:
-#         eds.append(parse_track(tr))
-
-#     return {"openings": ops, "endings": eds}
 
 
 def get_songs(anime):
@@ -172,9 +149,6 @@ def search_spotify(song, artist):
     print(query)
     res = sp.search(query, type="track", market=MARKET_CODE, limit=25)
 
-    # if res["tracks"]["total"] == 0:
-    #     query = re.sub("[^a-zA-Z0-9 \n\.]", " ", query)
-    #     res = sp.search(query, type="track", market=MARKET_CODE)
     tracks = [SpotifyTrack(song) for song in res["tracks"]["items"]]
     return (res["tracks"]["previous"], res["tracks"]["next"], tracks)
 
@@ -189,7 +163,6 @@ def new_playlist(title):
         name=title,
         public=False,
         collaborative=False,
-        # description="hi",
     )
 
 
@@ -198,13 +171,6 @@ def get_playlist(id):
 
 
 def addPlaylist(spotify_playlist, final_playlist):
-    # spotify_playlist = sp.user_playlist_create(
-    #     user_id,
-    #     name="testing playlist",
-    #     public=False,
-    #     collaborative=False,
-    #     description="hi",
-    # )
     print(spotify_playlist["id"])
     items = [track.id for track in final_playlist]
     print(items)
@@ -219,11 +185,14 @@ class Playlist:
         self.animePage = None
 
     def update_playlist(self, tr, update_buttons=True):
-
         if tr in self.playlist.keys():
-            self.playlist[tr].destroy()
-            self.playlist.pop(tr)
-            self.results.pop(tr)
+            self.playlist[tr][0].destroy()
+            self.playlist[tr][1].destroy()
+            del self.playlist[tr]
+            try:
+                del self.results[tr]
+            except KeyError:
+                print(f"{tr} has not been cached")
         else:
             track_frame = self.playlistPage.playlistFm.add_song_button(tr)
             self.playlist[tr] = track_frame
@@ -247,16 +216,6 @@ class SpotifyTrack:
         minutes = duration // 60000
         seconds = (duration % 60000) // 1000
         return f"{minutes}:{seconds:02d}"
-
-
-# def loadPreview(track):
-#     p = vlc.MediaPlayer(track.preview_url)
-#     p.play()
-#     return p
-
-
-# def stopPreview(p):
-#     p.stop()
 
 
 class MediaPlayer:
@@ -289,7 +248,6 @@ async def load_album_cover(searchFrame, track, size):
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     target.configure(image=img)
     target.image = img
-    # target.pack(side=tk.TOP, pady=20)
     print(f"Image fetched for {track.track_title}")
     searchFrame.update()
 
@@ -300,12 +258,11 @@ async def setButtonCover(btn, track, size=(70, 70)):
     btn.configure(image=img, compound=tk.TOP, borderwidth=0)
     btn.image = img
     btn.update()
-    # print(f'Image fetched for {anime["title"]}')
+
 
 def load_song_album(cover, track, size):
     imgRes = requests.get(track.album_cover["url"])
     img = ImageTk.PhotoImage(Image.open(BytesIO(imgRes.content)).resize(size))
     cover.configure(image=img)
     cover.image = img
-    # target.pack(side=tk.TOP, pady=20)
-    print(f"Image fetched for {track.track_title}") 
+    print(f"Image fetched for {track.track_title}")
