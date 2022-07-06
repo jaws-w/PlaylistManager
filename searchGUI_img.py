@@ -25,6 +25,7 @@ class tkinterApp(ctk.CTk):
         # default window size
         self.geometry("1920x1080")
         self.minsize(1200, 500)
+        self.title("Weeb Playlist Manager")
 
         # frame for holding the pages
         masterFrame = ctk.CTkFrame(master=self)
