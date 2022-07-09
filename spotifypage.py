@@ -203,9 +203,7 @@ class SpotifyPage(ctk.CTkFrame):
                 master=self,
                 text="Add to Spotify",
                 pady=20,
-                command=lambda: library.addPlaylist(
-                    self.get_playlist(), self.root.final_playlist
-                ),
+                command=self.addBtnOnclick,
             )
             self.addButton.grid(row=5, column=1, sticky=tk.EW)
             self.columnconfigure(1, weight=1)
@@ -217,9 +215,16 @@ class SpotifyPage(ctk.CTkFrame):
 
             self.frames[self.radio_var.get()].tkraise()
 
+        def addBtnOnclick(self):
+            library.addPlaylist(self.get_playlist(), self.root.final_playlist)
+            self.load_playlists(self.innerFrame)
+
         def load_playlists(self, frame):
             user_pls = library.get_user_playlists()
             self.selectButtons = []
+
+            for child in frame.winfo_children():
+                child.destroy()
 
             for i, pl in enumerate(user_pls["items"]):
                 label = ctk.CTkLabel(master=frame, text=pl["name"])
