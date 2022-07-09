@@ -201,7 +201,9 @@ class PlaylistPage(ctk.CTkFrame):
                     )
                     playBtn.grid(row=i, column=0)
 
-                    changeFinal = ctk.CTkButton(master=dummyFrame, width=60)
+                    changeFinal = ctk.CTkButton(
+                        master=dummyFrame, width=60, fg_color="gray"
+                    )
 
                     changeFinal.configure(text="+")
                     changeFinal.configure(
@@ -255,19 +257,15 @@ class PlaylistPage(ctk.CTkFrame):
 
             self.update()
 
-        # def clearSearch(self):
-        #     for child in self.winfo_children():
-        #         child.destroy()
-
         def updatefinal(self, btn, track):
             if track in self.root.final_playlist:
-                btn.configure(text="+")
+                btn.configure(text="+", fg_color="gray")
                 self.root.frames["SpotifyPage"].playlistReviewFm.removeFromFinal(
                     btn.finalFrame, track
                 )
             else:
                 self.root.final_playlist.append(track)
-                btn.configure(text="-")
+                btn.configure(text="-", fg_color=ThemeManager.theme["color"]["button"])
                 btn.finalFrame = self.root.frames[
                     "SpotifyPage"
                 ].playlistReviewFm.addToFinal(btn, track)

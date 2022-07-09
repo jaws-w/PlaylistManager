@@ -14,8 +14,8 @@ import os
 
 
 MARKET_CODE = "us"
-# scope = "playlist-modify-public playlist-modify-private"
-scope = "playlist-read-private playlist-modify-public playlist-modify-private"
+scope = "playlist-modify-public playlist-modify-private"
+# scope = "playlist-read-private playlist-modify-public playlist-modify-private"
 SPOTIPY_CLIENT_ID = "baffaf7266d04894a474288165840d28"
 SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
 

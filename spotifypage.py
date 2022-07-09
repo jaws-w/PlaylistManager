@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from customtkinter import ThemeManager
 import tkinter as tk
 
 import library
@@ -63,7 +64,7 @@ class SpotifyPage(ctk.CTkFrame):
             return finalFrame
 
         def removeFromFinal(self, del_frame, track):
-            del_frame.addBtn.configure(text="+")
+            del_frame.addBtn.configure(text="+", fg_color="gray")
             del_frame.destroy()
             self.root.final_playlist.remove(track)
             self.toggle_scroll()
@@ -136,8 +137,8 @@ class SpotifyPage(ctk.CTkFrame):
             self.root = root
 
             self.radio_var = tk.IntVar(master=self, value=0)
-            spacer = ctk.CTkLabel(master=self, text="")
-            spacer.grid(row=0, column=1)
+            spacer_1 = ctk.CTkLabel(master=self, text="")
+            spacer_1.grid(row=0, column=1)
 
             radioButton_1 = ctk.CTkRadioButton(
                 master=self,
@@ -232,6 +233,7 @@ class SpotifyPage(ctk.CTkFrame):
                 selectBtn = ctk.CTkButton(
                     master=frame,
                     text="select",
+                    fg_color="gray",
                     command=lambda index=i: self.select_playlist(index),
                 )
                 selectBtn.grid(row=i, column=1)
@@ -240,6 +242,12 @@ class SpotifyPage(ctk.CTkFrame):
             frame.columnconfigure(0, weight=1)
 
         def select_playlist(self, index):
+            for btn in self.selectButtons:
+                btn.configure(fg_color="gray")
+
+            self.selectButtons[index].configure(
+                fg_color=ThemeManager.theme["color"]["button"]
+            )
             self.index = index
 
         def get_playlist(self):
